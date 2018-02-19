@@ -8,7 +8,13 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
-    "commander": "^2.14.1"
+    "aws-sdk": "^2.197.0",
+    "cfn": "^1.2.0",
+    "chalk": "^2.3.1",
+    "commander": "^2.14.1",
+    "inquirer": "^5.1.0",
+    "node-yaml": "^3.1.1",
+    "path": "^0.12.7"
   },
   "bin": {
     "lola": "./lola.js"
