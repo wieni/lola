@@ -1,0 +1,21 @@
+{
+  "name": "lola",
+  "version": "0.0.1",
+  "description": "AWS related deployment helper. . ",
+  "main": "lola.js",
+  "repository": "git@wieni.githost.io:wieni/lola.git",
+  "author": "Bart Van Thillo <bart@wieni.be>",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "commander": "^2.14.1"
+  },
+  "bin": {
+    "lola": "./lola.js"
+  },
+  "devDependencies": {
+    "eslint": "^4.18.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.8.0"
+  }
+}
