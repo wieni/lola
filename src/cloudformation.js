@@ -1,21 +1,30 @@
 const cfn = require('cfn');
 
 class Cloudformation {
-    static async runValidate(stackName, config) {
+    constructor(config, stackName, env) {
+        this.config = config;
+        this.stackName = stackName;
+        this.env = env;
+    }
+
+    async runValidate() {
         try {
-            await cfn.validate(config.region, config.stacks[stackName].template);
+            await cfn.validate(
+                this.config.region,
+                this.config.stacks[this.stackName].template,
+            );
         } catch (error) {
             throw new Error(error);
         }
     }
 
-    static async runExists(stackName, config) {
+    async runExists() {
         try {
             // Returns boolean if stack name 'foo-bar' exists
             const exists = await cfn.stackExists({
-                name: stackName,
+                name: this.getFullStackName(),
                 awsConfig: {
-                    region: config.Region,
+                    region: this.config.Region,
                 },
             });
             if (exists) {
@@ -28,22 +37,21 @@ class Cloudformation {
         }
     }
 
-    // static async runDeploy(stackName, config) {
-    //     try {
-    //         await cfn({
-    //             name: stackName,
-    //             template: config.Stacks[stackName].Template,
-    //             cfParams: {},
-    //             awsConfig: {
-    //                 region: config.Region,
-    //             },
-    //         });
-
-    //         // console.log(`- ${chalk.green(getFullName(stackName, env))}: Deployed.`);
-    //     } catch (error) {
-    //         // console.log(`- ${chalk.red(getFullName(stackName, env))}: ${error.message}`);
-    //     }
-    // }
+    static async runDeploy(stackName, config) {
+        try {
+            await cfn.validate(config.region, config.stacks[stackName].template);
+            await cfn({
+                name: stackName,
+                template: config.Stacks[stackName].Template,
+                cfParams: {},
+                awsConfig: {
+                    region: config.Region,
+                },
+            });
+        } catch (error) {
+            throw new Error(error);
+        }
+    }
 
     // static async runDelete(stackName, config) {
     //     try {
@@ -59,6 +67,20 @@ class Cloudformation {
     //         // console.log(`- ${chalk.red(getFullName(stackName, env))}: ${error.message}`);
     //     }
     // }
+
+    getFullStackName() {
+        let result = `${this.config.project}-${this.stackName}-${this.env}`;
+        console.log(this.config.environments);
+        console.log(this.env);
+        if (this.config.environments[this.env]
+            && this.config.environments[this.env].stackName
+            && this.config.environments[this.env].stackName.name
+        ) {
+            result = this.config.environments[this.env].stackName.name;
+        }
+
+        return result;
+    }
 }
 
 module.exports = Cloudformation;

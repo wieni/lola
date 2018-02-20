@@ -4,10 +4,12 @@ const inquirer = require('inquirer');
 const actions = [
     'validate',
     'exists',
-    // 'deploy',
+    'deploy',
     // 'status',
     // 'delete',
 ];
+
+const all = '*all*';
 
 class Options {
     /**
@@ -24,32 +26,37 @@ class Options {
     static async validateOptions(options, config) {
         const deployOptions = options;
 
+        // Stack.
         if (!deployOptions.stack) {
             deployOptions.stack = await inquirer.prompt([
                 {
                     type: 'list',
                     name: 'stack',
                     message: 'Stack: ',
-                    choices: ['all'].concat(Object.keys(config.stacks)),
+                    choices: Object.keys(config.stacks).concat([all]),
                 },
             ]);
-            if (deployOptions.stack.stack === 'all') {
+            if (deployOptions.stack.stack === all) {
                 deployOptions.stack = Object.keys(config.stacks);
             } else {
                 deployOptions.stack = [deployOptions.stack.stack];
             }
         }
+        if (Object.keys(config.stacks).indexOf(deployOptions.stack) === -1) {
+            throw new Error(`Stack not found in config file: ${deployOptions.stack}`);
+        }
 
+        // Environment.
         if (config.environments && !deployOptions.environment) {
             deployOptions.environment = await inquirer.prompt([
                 {
                     type: 'list',
                     name: 'environment',
                     message: 'Environment: ',
-                    choices: ['all'].concat(Object.keys(config.environments)),
+                    choices: Object.keys(config.environments).concat([all]),
                 },
             ]);
-            if (deployOptions.environment.environment === 'all') {
+            if (deployOptions.environment.environment === all) {
                 deployOptions.environment = Object.keys(config.environments);
             } else {
                 deployOptions.environment = [deployOptions.environment.environment];
@@ -57,6 +64,8 @@ class Options {
         }
         if (!deployOptions.environment) {
             deployOptions.environment = ['default'];
+        } else if (Object.keys(config.environments).indexOf(deployOptions.environment) === -1) {
+            throw new Error(`Environment not found in config file: ${deployOptions.environment}`);
         }
 
         if (!deployOptions.action) {
