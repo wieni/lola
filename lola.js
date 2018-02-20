@@ -18,6 +18,7 @@ program
     .option('-v, --verbose', 'Verbose output')
     .option('-s, --options-stack <optionsStack>', 'Stack')
     .option('-e, --options-environment <optionsEnvironment>', 'Environment')
+    .option('-a, --options-action <optionsaction>', 'Action')
     .parse(process.argv);
 
 function log(message) {
@@ -51,6 +52,9 @@ async function start() {
         if (program.optionsEnvironment) {
             options.environments = [program.optionsEnvironment];
         }
+        if (program.optionsAction) {
+            options.action = program.optionsAction;
+        }
 
         if (program.verbose) log(options);
 
@@ -68,7 +72,7 @@ async function start() {
                 switch (options.action) {
                 default:
                 case 'validate':
-                    cloudformation.runValidate()
+                    await cloudformation.runValidate()
                         .then(() => {
                             log(`- Template ${chalk.green(stackName)}: Valid`);
                         })
@@ -77,10 +81,10 @@ async function start() {
                         });
                     break;
                 case 'status':
-                    cloudformation.runStatus()
+                    await cloudformation.runStatus()
                         .then((logs) => {
                             logs.forEach((message) => {
-                                log(message);
+                                console.log(message);
                             });
                         })
                         .catch((error) => {
@@ -88,7 +92,7 @@ async function start() {
                         });
                     break;
                 case 'deploy':
-                    cloudformation.runDeploy()
+                    await cloudformation.runDeploy()
                         .then(() => {
                             log(`- Deploying ${chalk.green(stackName)}: Done`);
                         })
@@ -97,7 +101,7 @@ async function start() {
                         });
                     break;
                 case 'delete':
-                    cloudformation.runDelete()
+                    await cloudformation.runDelete()
                         .then(() => {
                             log(`- Deleted ${chalk.green(stackName)}`);
                         })

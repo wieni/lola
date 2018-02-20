@@ -38,7 +38,7 @@ class Options {
             if (input === all) {
                 deployOptions.stacks = Object.keys(config.stacks);
             } else {
-                deployOptions.stacks = [input];
+                deployOptions.stacks = [input.stack];
             }
         }
         deployOptions.stacks.forEach((name) => {
@@ -60,7 +60,7 @@ class Options {
             if (input === all) {
                 deployOptions.environments = Object.keys(config.environments);
             } else {
-                deployOptions.environments = [input];
+                deployOptions.environments = [input.environment];
             }
         }
         if (!deployOptions.environments) {
