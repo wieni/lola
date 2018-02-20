@@ -2,6 +2,7 @@
 
 const program = require('commander');
 const chalk = require('chalk');
+const moment = require('moment');
 const AWS = require('aws-sdk');
 
 const Config = require('./src/config.js');
@@ -19,45 +20,49 @@ program
     .option('-e, --options-environment <optionsEnvironment>', 'Environment')
     .parse(process.argv);
 
+function log(message) {
+    console.log(`[${chalk.gray(moment().format('HH:mm:ss'))}] ${message}`);
+}
+
 if (program.verbose) {
-    console.log('Reading config file');
+    log('Reading config file');
 }
 
 async function start() {
     try {
         // Read config file (not optional)
-        if (program.verbose) console.log('Reading config');
+        if (program.verbose) log('Reading config');
         let config = await Config.readConfigFile(program.configFile);
-        if (program.verbose) console.log(config);
+        if (program.verbose) log(config);
 
         // Validate (and add stuff to) config.
-        if (program.verbose) console.log('Validating config');
+        if (program.verbose) log('Validating config');
         config = await Config.validateConfig(config);
 
         // Set credentials from profile.
         AWS.config.credentials = new AWS.SharedIniFileCredentials({ profile: config.profile });
 
         // Read options file (optional).
-        if (program.verbose) console.log('Reading options');
+        if (program.verbose) log('Reading options');
         let options = await Options.readOptionsFile(program.optionsFile);
         if (program.optionsStack) {
-            options.stack = program.optionsStack;
+            options.stacks = [program.optionsStack];
         }
         if (program.optionsEnvironment) {
-            options.environment = program.optionsEnvironment;
+            options.environments = [program.optionsEnvironment];
         }
 
-        if (program.verbose) console.log(options);
-
-        // Banner.
-        console.log(chalk.yellow.bold(`\n${config.project}\n`));
+        if (program.verbose) log(options);
 
         // Validate (and add stuff to) options.
-        if (program.verbose) console.log('Validating options');
+        if (program.verbose) log('Validating options');
         options = await Options.validateOptions(options, config);
 
-        options.stack.forEach(async (stackName) => {
-            options.environment.forEach(async (env) => {
+        // Banner.
+        log(chalk.yellow.bold(`Starting: ${config.project}`));
+
+        options.stacks.forEach(async (stackName) => {
+            options.environments.forEach(async (env) => {
                 const cloudformation = new Cloudformation(config, stackName, env);
 
                 switch (options.action) {
@@ -65,43 +70,46 @@ async function start() {
                 case 'validate':
                     cloudformation.runValidate()
                         .then(() => {
-                            console.log(`- Template ${chalk.green(stackName)}: Valid`);
+                            log(`- Template ${chalk.green(stackName)}: Valid`);
                         })
                         .catch((error) => {
-                            console.log(`- Template ${chalk.red(stackName)}: ${error.message}`);
+                            log(`- Template ${chalk.red(stackName)}: ${error.message}`);
                         });
                     break;
-                case 'exists':
-                    cloudformation.runExists()
-                        .then((exists) => {
-                            if (exists) {
-                                console.log(`- Stack ${chalk.green(stackName)}: Exists (${cloudformation.getFullStackName()})`);
-                            } else {
-                                console.log(`- Stack ${chalk.green(stackName)}: Does not exist (${cloudformation.getFullStackName()})`);
-                            }
+                case 'status':
+                    cloudformation.runStatus()
+                        .then((logs) => {
+                            logs.forEach((message) => {
+                                log(message);
+                            });
                         })
                         .catch((error) => {
-                            console.log(`- ${chalk.red(stackName)}: ${error.message}`);
+                            log(`- ${chalk.red(stackName)}: ${error.message}`);
                         });
                     break;
                 case 'deploy':
-                    Cloudformation.runDeploy()
-                        .then((exists) => {
-                            if (exists) {
-                                console.log(`- Stack ${chalk.green(stackName)}: Exists`);
-                            } else {
-                                console.log(`- Stack ${chalk.green(stackName)}: Does not exist`);
-                            }
+                    cloudformation.runDeploy()
+                        .then(() => {
+                            log(`- Deploying ${chalk.green(stackName)}: Done`);
                         })
                         .catch((error) => {
-                            console.log(`- ${chalk.red(stackName)}: ${error.message}`);
+                            log(`- Deploying ${chalk.red(stackName)}: ${error.message}`);
+                        });
+                    break;
+                case 'delete':
+                    cloudformation.runDelete()
+                        .then(() => {
+                            log(`- Deleted ${chalk.green(stackName)}`);
+                        })
+                        .catch((error) => {
+                            log(`- Not deleted ${chalk.red(stackName)}: ${error.message}`);
                         });
                     break;
                 }
             });
         });
     } catch (err) {
-        console.log(chalk.red.underline(err));
+        log(chalk.red.underline(err));
     }
 }
 

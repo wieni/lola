@@ -3,10 +3,9 @@ const inquirer = require('inquirer');
 
 const actions = [
     'validate',
-    'exists',
     'deploy',
-    // 'status',
-    // 'delete',
+    'status',
+    'delete',
 ];
 
 const all = '*all*';
@@ -27,8 +26,8 @@ class Options {
         const deployOptions = options;
 
         // Stack.
-        if (!deployOptions.stack) {
-            deployOptions.stack = await inquirer.prompt([
+        if (!deployOptions.stacks) {
+            const input = await inquirer.prompt([
                 {
                     type: 'list',
                     name: 'stack',
@@ -36,19 +35,21 @@ class Options {
                     choices: Object.keys(config.stacks).concat([all]),
                 },
             ]);
-            if (deployOptions.stack.stack === all) {
-                deployOptions.stack = Object.keys(config.stacks);
+            if (input === all) {
+                deployOptions.stacks = Object.keys(config.stacks);
             } else {
-                deployOptions.stack = [deployOptions.stack.stack];
+                deployOptions.stacks = [input];
             }
         }
-        if (Object.keys(config.stacks).indexOf(deployOptions.stack) === -1) {
-            throw new Error(`Stack not found in config file: ${deployOptions.stack}`);
-        }
+        deployOptions.stacks.forEach((name) => {
+            if (Object.keys(config.stacks).indexOf(name) === -1) {
+                throw new Error(`Stack not found in config file: ${name}`);
+            }
+        });
 
         // Environment.
-        if (config.environments && !deployOptions.environment) {
-            deployOptions.environment = await inquirer.prompt([
+        if (config.environments && !deployOptions.environments) {
+            const input = await inquirer.prompt([
                 {
                     type: 'list',
                     name: 'environment',
@@ -56,16 +57,20 @@ class Options {
                     choices: Object.keys(config.environments).concat([all]),
                 },
             ]);
-            if (deployOptions.environment.environment === all) {
-                deployOptions.environment = Object.keys(config.environments);
+            if (input === all) {
+                deployOptions.environments = Object.keys(config.environments);
             } else {
-                deployOptions.environment = [deployOptions.environment.environment];
+                deployOptions.environments = [input];
             }
         }
-        if (!deployOptions.environment) {
-            deployOptions.environment = ['default'];
-        } else if (Object.keys(config.environments).indexOf(deployOptions.environment) === -1) {
-            throw new Error(`Environment not found in config file: ${deployOptions.environment}`);
+        if (!deployOptions.environments) {
+            deployOptions.environments = ['default'];
+        } else {
+            deployOptions.environments.forEach((name) => {
+                if (Object.keys(config.environments).indexOf(name) === -1) {
+                    throw new Error(`Environment not found in config file: ${name}`);
+                }
+            });
         }
 
         if (!deployOptions.action) {

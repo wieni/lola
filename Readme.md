@@ -39,7 +39,7 @@ environments:
         # Environment params for <stack1>
         <stack1>:
             # Override the stackname for this env. Optional, if not present lola generates one.
-            name:
+            name: <my-stack-dev>
 ```
 
 ### options
