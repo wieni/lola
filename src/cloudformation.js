@@ -41,7 +41,19 @@ class Cloudformation {
             }).promise();
             if (data.Stacks) {
                 const stackData = data.Stacks[0];
-                result.push(`  - StackStatus: ${stackData.StackStatus}`);
+                result.push(`  * StackStatus: ${stackData.StackStatus}`);
+                result.push(`  * CreationTime: ${stackData.CreationTime}`);
+                result.push(`  * EnableTerminationProtection: ${stackData.EnableTerminationProtection}`);
+                result.push(`  * Parameters: ${stackData.Parameters.join(', ')}`);
+
+                if (stackData.Outputs) {
+                    result.push('  * Outputs:');
+                    stackData.Outputs.forEach((element) => {
+                        result.push(`    - ${element.OutputKey}: ${element.OutputValue}`);
+                    });
+                }
+
+                result.push(`  * Tags: ${stackData.Tags.join(', ')}`);
             }
             // console.log(data);
 
