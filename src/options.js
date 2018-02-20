@@ -3,8 +3,9 @@ const inquirer = require('inquirer');
 
 const actions = [
     'validate',
-    'deploy',
-    'status',
+    'exists',
+    // 'deploy',
+    // 'status',
     // 'delete',
 ];
 

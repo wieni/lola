@@ -9,6 +9,25 @@ class Cloudformation {
         }
     }
 
+    static async runExists(stackName, config) {
+        try {
+            // Returns boolean if stack name 'foo-bar' exists
+            const exists = await cfn.stackExists({
+                name: stackName,
+                awsConfig: {
+                    region: config.Region,
+                },
+            });
+            if (exists) {
+                return true;
+            }
+
+            return false;
+        } catch (error) {
+            throw new Error(error);
+        }
+    }
+
     // static async runDeploy(stackName, config) {
     //     try {
     //         await cfn({

@@ -29,6 +29,25 @@ profile: <~/.aws/credentails profile name>
 # Stacks is a description of the different cloudformation stacks you'll want to
 # manage and the specific order in which they'll need to be managed.
 stacks:
+    # Give that stack a name.
     <stack1>:
         template: <location of the template.yml file for this stack>
+
+environments:
+    # Give that environment a name.
+    <dev>:
+        # Environment params for <stack1>
+        <stack1>:
+            # Override the stackname for this env. Optional, if not present lola generates one.
+            name:
 ```
+
+### options
+
+There are some choices to be made when running lola:
+
+* Which stacks you want to apply your action on
+* Which env (if any) you want to apply your action on
+* Which action you want to run
+
+These will be asked when running lola but can also be provided through an input file (-o flag)

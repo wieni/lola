@@ -7,6 +7,7 @@ const AWS = require('aws-sdk');
 const Config = require('./src/config.js');
 const Options = require('./src/options.js');
 const Cloudformation = require('./src/cloudformation.js');
+const Helpers = require('./src/helpers.js');
 
 program
     .version('0.0.1')
@@ -48,12 +49,27 @@ async function start() {
 
         options.stack.forEach(async (stackName) => {
             options.environment.forEach(async (env) => {
+                const fullStacKName = Helpers.createFullStackName(config, stackName, env);
+
                 switch (options.action) {
                 default:
                 case 'validate':
                     Cloudformation.runValidate(stackName, config)
                         .then(() => {
                             console.log(`- ${chalk.green(stackName)}: Valid`);
+                        })
+                        .catch((error) => {
+                            console.log(`- ${chalk.red(stackName)}: ${error.message}`);
+                        });
+                    break;
+                case 'exists':
+                    Cloudformation.runExists(fullStacKName, config)
+                        .then((exists) => {
+                            if (exists) {
+                                console.log(`- ${chalk.green(stackName)}: Exists`);
+                            } else {
+                                console.log(`- ${chalk.green(stackName)}: Does not exist`);
+                            }
                         })
                         .catch((error) => {
                             console.log(`- ${chalk.red(stackName)}: ${error.message}`);
