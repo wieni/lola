@@ -1,15 +1,24 @@
 #!/usr/bin/env node
-
 const program = require('commander');
 const chalk = require('chalk');
 const moment = require('moment');
+const semver = require('semver');
 const AWS = require('aws-sdk');
 
+const { engines } = require('./package');
 const Config = require('./src/config.js');
 const Options = require('./src/options.js');
 const Cloudformation = require('./src/cloudformation.js');
 // const Helpers = require('./src/helpers.js');
 
+// Check node version.
+const version = engines.node;
+if (!semver.satisfies(process.version, version)) {
+    console.log(`Required node version ${version} not satisfied with current version ${process.version}.`);
+    process.exit(1);
+}
+
+// Read input.
 program
     .version('0.0.1')
     .description('Do AWS Stuff')
