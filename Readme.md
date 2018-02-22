@@ -34,9 +34,6 @@ stacks:
         template: <location of the template.yml file for this stack>
         actions:
             preDeploy: preDeployScript.js
-        hooks:
-            pre-deploy:
-                - preDeploy
 
 environments:
     # Give that environment a name.
@@ -45,6 +42,11 @@ environments:
         <stack1>:
             # Override the stackname for this env. Optional, if not present lola generates one.
             name: <my-stack-dev>
+            params:
+                <Param1>: <Value1>
+            hooks:
+                pre-deploy:
+                    - preDeploy
 ```
 
 ### options
