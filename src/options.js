@@ -5,7 +5,6 @@ const actions = [
     'validate',
     'deploy',
     'status',
-    'delete',
 ];
 
 const all = '*all*';

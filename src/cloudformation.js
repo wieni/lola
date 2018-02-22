@@ -29,7 +29,7 @@ class Cloudformation {
         try {
             const exists = await this.runExists();
             if (!exists) {
-                result.push(`- Stack ${chalk.red(this.stackName)}: Does not exist`);
+                result.push(`- Stack ${chalk.red(this.stackName)}: Does not exist (${this.getFullStackName()})`);
                 return result;
             }
 
@@ -44,7 +44,13 @@ class Cloudformation {
                 result.push(`  * StackStatus: ${stackData.StackStatus}`);
                 result.push(`  * CreationTime: ${stackData.CreationTime}`);
                 result.push(`  * EnableTerminationProtection: ${stackData.EnableTerminationProtection}`);
-                result.push(`  * Parameters: ${stackData.Parameters.join(', ')}`);
+
+                if (stackData.Parameters) {
+                    result.push('  * Parameters:');
+                    stackData.Parameters.forEach((element) => {
+                        result.push(`    - ${element.ParameterKey}: ${element.ParameterValue}`);
+                    });
+                }
 
                 if (stackData.Outputs) {
                     result.push('  * Outputs:');
@@ -55,7 +61,6 @@ class Cloudformation {
 
                 result.push(`  * Tags: ${stackData.Tags.join(', ')}`);
             }
-            // console.log(data);
 
             return result;
         } catch (error) {
@@ -72,6 +77,7 @@ class Cloudformation {
                     region: this.config.region,
                 },
             });
+
             if (exists) {
                 return true;
             }
@@ -84,11 +90,19 @@ class Cloudformation {
 
     async runDeploy() {
         try {
+            // Does template validate?
             await this.runValidate();
+            // Get params.
+            let cfParams = {};
+            if (this.config.environments[this.env][this.stackName].params) {
+                cfParams = this.config.environments[this.env][this.stackName].params;
+            }
+
+            // Do the actual deploy.
             await cfn({
                 name: this.getFullStackName(),
                 template: this.config.stacks[this.stackName].template,
-                cfParams: {},
+                cfParams,
                 awsConfig: {
                     region: this.config.region,
                 },
@@ -104,12 +118,20 @@ class Cloudformation {
             if (!exists) {
                 throw new Error(`Tried to delete non-existing stack: ${this.stackName}`);
             }
-            await cfn.delete({
-                name: this.getFullStackName(),
-                awsConfig: {
-                    region: this.config.region,
-                },
-            });
+
+            const data = await this.cloudformation.deleteStack({
+                StackName: this.getFullStackName(),
+            }).promise();
+            if (data.ResponseMetadata.RequestId) {
+                console.log(data);
+            }
+
+            // await cfn.delete({
+            //     name: this.getFullStackName(),
+            //     awsConfig: {
+            //         region: this.config.region,
+            //     },
+            // });
             return true;
         } catch (error) {
             throw new Error(error);

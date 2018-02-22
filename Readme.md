@@ -32,6 +32,11 @@ stacks:
     # Give that stack a name.
     <stack1>:
         template: <location of the template.yml file for this stack>
+        actions:
+            preDeploy: preDeployScript.js
+        hooks:
+            pre-deploy:
+                - preDeploy
 
 environments:
     # Give that environment a name.
@@ -50,4 +55,32 @@ There are some choices to be made when running lola:
 * Which env (if any) you want to apply your action on
 * Which action you want to run
 
-These will be asked when running lola but can also be provided through an input file (-o flag)
+These will be asked when running lola but can also be provided through an input file (-o flag) or other input flags.
+
+### deploy hooks
+
+- pre-deploy
+
+### actions
+
+Each stack can define actions. Each action can be run on it's own or can be attached to one of the deploy hooks.
+
+
+```js
+/**
+ *
+ * @param Object config
+ *   The full config object file
+ * @param String stackName
+ *   The stackName currently running
+ * @param String env
+ *   The env for which the current stack is running.
+ */
+function runAction(config, stackName, env) {
+    console.log(config);
+
+    throw new Error('Error');
+}
+
+module.exports.runAction = runAction;
+```

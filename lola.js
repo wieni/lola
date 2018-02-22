@@ -51,6 +51,10 @@ async function start() {
 
         // Set credentials from profile.
         AWS.config.credentials = new AWS.SharedIniFileCredentials({ profile: config.profile });
+        if (AWS.config.credentials.accessKeyId === undefined) {
+            console.log(`Got no Access Key for profile ${config.profile}. Unable to connect.`);
+            process.exit(1);
+        }
 
         // Read options file (optional).
         if (program.verbose) log('Reading options');
@@ -107,15 +111,6 @@ async function start() {
                         })
                         .catch((error) => {
                             log(`- Deploying ${chalk.red(stackName)}: ${error.message}`);
-                        });
-                    break;
-                case 'delete':
-                    await cloudformation.runDelete()
-                        .then(() => {
-                            log(`- Deleted ${chalk.green(stackName)}`);
-                        })
-                        .catch((error) => {
-                            log(`- Not deleted ${chalk.red(stackName)}: ${error.message}`);
                         });
                     break;
                 }
