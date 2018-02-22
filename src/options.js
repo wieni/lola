@@ -46,31 +46,37 @@ class Options {
             }
         });
 
-        // Environment.
-        if (config.environments && !deployOptions.environments) {
+        // Environments.
+        const allowedEnvs = [];
+        Object.keys(config.environments).forEach((env) => {
+            deployOptions.stacks.forEach((name) => {
+                if (config.environments[env][name]) {
+                    allowedEnvs.push(env);
+                }
+            });
+        });
+        if (deployOptions.environments) {
+            // TODO Validate them.
+        } else {
             const input = await inquirer.prompt([
                 {
                     type: 'list',
                     name: 'environment',
                     message: 'Environment: ',
-                    choices: Object.keys(config.environments).concat([all]),
+                    choices: allowedEnvs.concat([all]),
                 },
             ]);
             if (input === all) {
-                deployOptions.environments = Object.keys(config.environments);
+                deployOptions.environments = allowedEnvs;
             } else {
                 deployOptions.environments = [input.environment];
             }
         }
-        if (!deployOptions.environments) {
-            deployOptions.environments = ['default'];
-        } else {
-            deployOptions.environments.forEach((name) => {
-                if (Object.keys(config.environments).indexOf(name) === -1) {
-                    throw new Error(`Environment not found in config file: ${name}`);
-                }
-            });
-        }
+        deployOptions.environments.forEach((name) => {
+            if (Object.keys(config.environments).indexOf(name) === -1) {
+                throw new Error(`Environment not found in config file: ${name}`);
+            }
+        });
 
         if (!deployOptions.action) {
             deployOptions.action = await inquirer.prompt([
