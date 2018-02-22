@@ -2,6 +2,7 @@ const cfn = require('cfn');
 const chalk = require('chalk');
 const AWS = require('aws-sdk');
 
+const Actions = require('./actions.js');
 class Cloudformation {
     constructor(config, stackName, env) {
         this.config = config;
@@ -24,6 +25,20 @@ class Cloudformation {
         }
     }
 
+    async describeStack() {
+        try {
+            const data = await this.cloudformation.describeStacks({
+                StackName: this.getFullStackName(),
+            }).promise();
+            if (data.Stacks) {
+                return data.Stacks[0];
+            }
+            return false;
+        } catch (error) {
+            throw new Error(error);
+        }
+    }
+
     async runStatus() {
         const result = [];
         try {
@@ -36,11 +51,8 @@ class Cloudformation {
             result.push(`- Stack ${chalk.green(this.stackName)}: Exists`);
 
             // Get Stack Intel.
-            const data = await this.cloudformation.describeStacks({
-                StackName: this.getFullStackName(),
-            }).promise();
-            if (data.Stacks) {
-                const stackData = data.Stacks[0];
+            const stackData = await this.describeStack();
+            if (stackData) {
                 result.push(`  * StackStatus: ${stackData.StackStatus}`);
                 result.push(`  * CreationTime: ${stackData.CreationTime}`);
                 result.push(`  * EnableTerminationProtection: ${stackData.EnableTerminationProtection}`);
@@ -92,6 +104,22 @@ class Cloudformation {
         try {
             // Does template validate?
             await this.runValidate();
+
+            let stackData = await this.describeStack();
+
+            // pre-deploy hook.
+            if (this.config.environments[this.env][this.stackName].hooks['pre-deploy']) {
+                await Promise.all(this.config.environments[this.env][this.stackName].hooks['pre-deploy'].map(async (action) => {
+                    await Actions.runAction({
+                        config: this.config,
+                        stackName: this.stackName,
+                        env: this.env,
+                        action,
+                        outputs: stackData,
+                    });
+                }));
+            }
+
             // Get params.
             let cfParams = {};
             if (this.config.environments[this.env][this.stackName].params) {
@@ -107,6 +135,21 @@ class Cloudformation {
                     region: this.config.region,
                 },
             });
+
+            stackData = await this.describeStack();
+
+            // post-deploy hook.
+            if (this.config.environments[this.env][this.stackName].hooks['post-deploy']) {
+                await Promise.all(this.config.environments[this.env][this.stackName].hooks['post-deploy'].map(async (action) => {
+                    await Actions.runAction({
+                        config: this.config,
+                        stackName: this.stackName,
+                        env: this.env,
+                        action,
+                        outputs: stackData,
+                    });
+                }));
+            }
         } catch (error) {
             throw new Error(error);
         }

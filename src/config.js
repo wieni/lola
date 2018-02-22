@@ -1,6 +1,8 @@
 const yaml = require('node-yaml');
 const inquirer = require('inquirer');
 
+const Actions = require('./actions.js');
+
 const regions = [
     'eu-west-1',
     'eu-central-1',
@@ -53,6 +55,14 @@ class Config {
                 },
             ]);
         }
+
+        await Promise.all(Object.keys(newConfig.stacks).map(async (stack) => {
+            if (newConfig.stacks[stack].actions) {
+                await Promise.all(Object.keys(newConfig.stacks[stack].actions).map(async (action) => {
+                    await Actions.validateAction(newConfig.stacks[stack].actions[action]);
+                }));
+            }
+        }));
 
         return newConfig;
     }
