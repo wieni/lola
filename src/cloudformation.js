@@ -183,7 +183,9 @@ class Cloudformation {
 
     getFullStackName() {
         let result = `${this.config.project}-${this.stackName}-${this.env}`;
+        result = result.toLowerCase();
 
+        // Allow overrides. Note: This makes it possible to uppercase stuff again.
         if (this.config.environments[this.env]
             && this.config.environments[this.env][this.stackName]
             && this.config.environments[this.env][this.stackName].name
