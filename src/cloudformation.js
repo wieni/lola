@@ -3,6 +3,7 @@ const chalk = require('chalk');
 const AWS = require('aws-sdk');
 
 const Actions = require('./actions.js');
+
 class Cloudformation {
     constructor(config, stackName, env) {
         this.config = config;

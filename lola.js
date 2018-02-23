@@ -9,7 +9,6 @@ const { engines } = require('./package');
 const Config = require('./src/config.js');
 const Options = require('./src/options.js');
 const Cloudformation = require('./src/cloudformation.js');
-// const Helpers = require('./src/helpers.js');
 
 // Check node version.
 const version = engines.node;
