@@ -8,7 +8,7 @@ const access = util.promisify(fs.access);
 class Actions {
     static async getPathOfAction(config, stack, action) {
         let actionPath = false;
-        console.log(config);
+
         if (config.stacks[stack].actions) {
             await Promise.all(Object.keys(config.stacks[stack].actions).map(async (actionName) => {
                 if (action === actionName) {
