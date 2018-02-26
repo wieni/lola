@@ -10,22 +10,25 @@ class Cloudformation {
         this.stackName = stackName;
         this.env = env;
 
+        this.region = this.config.environments[this.env][this.stackName].region;
+        this.template = this.config.stacks[this.stackName].template;
+
         // Set credentials from profile.
         AWS.config.credentials = new AWS.SharedIniFileCredentials({
             profile: this.config.environments[this.env][this.stackName].profile,
-            region: this.config.environments[this.env][this.stackName].region,
+            region: this.region,
         });
 
         this.cloudformation = new AWS.CloudFormation({
-            region: this.config.environments[this.env][this.stackName].region,
+            region: this.region,
         });
     }
 
     async runValidate() {
         try {
             await cfn.validate(
-                this.config.environments[this.env][this.stackName].region,
-                this.config.stacks[this.stackName].template,
+                this.region,
+                this.template,
             );
         } catch (error) {
             throw new Error(error);
@@ -93,7 +96,7 @@ class Cloudformation {
             const exists = await cfn.stackExists({
                 name: this.getFullStackName(),
                 awsConfig: {
-                    region: this.config.environments[this.env][this.stackName].region,
+                    region: this.region,
                 },
             });
 
@@ -108,20 +111,20 @@ class Cloudformation {
     }
 
     async runDeploy() {
-        try {
-            // Does template validate?
-            const exists = await this.runExists();
+        // Does template validate?
+        const exists = await this.runExists();
 
-            let stackData = {};
-            if (!exists) {
-                console.warn('Stack does not exist, creating');
-            } else {
-                stackData = await this.describeStack();
-            }
+        let stackData = {};
+        if (!exists) {
+            console.warn('Stack does not exist, creating');
+        } else {
+            stackData = await this.describeStack();
+        }
 
-            // pre-deploy hook.
-            if (this.config.environments[this.env][this.stackName].hooks['pre-deploy']) {
-                await Promise.all(this.config.environments[this.env][this.stackName].hooks['pre-deploy'].map(async (action) => {
+        // pre-deploy hook.
+        if (this.config.environments[this.env][this.stackName].hooks['pre-deploy']) {
+            await Promise.all(this.config.environments[this.env][this.stackName].hooks['pre-deploy'].map(async (action) => {
+                try {
                     await Actions.runAction({
                         config: this.config,
                         stackName: this.stackName,
@@ -129,30 +132,38 @@ class Cloudformation {
                         action,
                         outputs: stackData,
                     });
-                }));
-            }
+                } catch (err) {
+                    throw new Error(`pre-deploy: ${err}`);
+                }
+            }));
+        }
 
-            // Get params.
-            let cfParams = {};
-            if (this.config.environments[this.env][this.stackName].params) {
-                cfParams = this.config.environments[this.env][this.stackName].params;
-            }
+        // Get params.
+        let cfParams = {};
+        if (this.config.environments[this.env][this.stackName].params) {
+            cfParams = this.config.environments[this.env][this.stackName].params;
+        }
 
-            // Do the actual deploy.
+        // Do the actual deploy.
+        try {
             await cfn({
                 name: this.getFullStackName(),
-                template: this.config.stacks[this.stackName].template,
+                template: this.template,
                 cfParams,
                 awsConfig: {
-                    region: this.config.region,
+                    region: this.region,
                 },
             });
+        } catch (err) {
+            throw new Error(`deploy: ${err}`);
+        }
 
-            stackData = await this.describeStack();
+        stackData = await this.describeStack();
 
-            // post-deploy hook.
-            if (this.config.environments[this.env][this.stackName].hooks['post-deploy']) {
-                await Promise.all(this.config.environments[this.env][this.stackName].hooks['post-deploy'].map(async (action) => {
+        // post-deploy hook.
+        if (this.config.environments[this.env][this.stackName].hooks['post-deploy']) {
+            await Promise.all(this.config.environments[this.env][this.stackName].hooks['post-deploy'].map(async (action) => {
+                try {
                     await Actions.runAction({
                         config: this.config,
                         stackName: this.stackName,
@@ -160,10 +171,10 @@ class Cloudformation {
                         action,
                         outputs: stackData,
                     });
-                }));
-            }
-        } catch (error) {
-            throw new Error(error);
+                } catch (err) {
+                    throw new Error(`post-deploy: ${err}`);
+                }
+            }));
         }
     }
 
@@ -184,7 +195,7 @@ class Cloudformation {
             // await cfn.delete({
             //     name: this.getFullStackName(),
             //     awsConfig: {
-            //         region: this.config.region,
+            //         region: this.region,
             //     },
             // });
             return true;
