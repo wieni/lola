@@ -1,6 +1,6 @@
 const cfn = require('cfn');
-const chalk = require('chalk');
 const AWS = require('aws-sdk');
+const yaml = require('node-yaml');
 
 const Actions = require('./actions.js');
 
@@ -43,41 +43,14 @@ class Cloudformation {
     }
 
     async runStatus() {
-        const result = [];
-
         const exists = await this.runExists();
         if (!exists) {
-            result.push(`- Stack ${chalk.red(this.stackName)}: Does not exist (${this.getFullStackName()})`);
-            return result;
+            throw new Error('Does not exist');
         }
-
-        result.push(`- Stack ${chalk.green(this.stackName)}: Exists`);
 
         // Get Stack Intel.
         const stackData = await this.describeStack();
-        if (stackData) {
-            result.push(`  * StackStatus: ${stackData.StackStatus}`);
-            result.push(`  * CreationTime: ${stackData.CreationTime}`);
-            result.push(`  * EnableTerminationProtection: ${stackData.EnableTerminationProtection}`);
-
-            if (stackData.Parameters) {
-                result.push('  * Parameters:');
-                stackData.Parameters.forEach((element) => {
-                    result.push(`    - ${element.ParameterKey}: ${element.ParameterValue}`);
-                });
-            }
-
-            if (stackData.Outputs) {
-                result.push('  * Outputs:');
-                stackData.Outputs.forEach((element) => {
-                    result.push(`    - ${element.OutputKey}: ${element.OutputValue}`);
-                });
-            }
-
-            result.push(`  * Tags: ${stackData.Tags.join(', ')}`);
-        }
-
-        return result;
+        return yaml.dump(stackData);
     }
 
     async runExists() {

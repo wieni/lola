@@ -36,8 +36,13 @@ function logError(subject, message) {
     log(`${chalk.red(subject)}: ${message}`);
 }
 
-function logOk(subject, message) {
-    log(`${chalk.green(subject)}: ${message}`);
+function logOk(subject, message, indent = false) {
+    if (indent) {
+        let result = `${chalk.green(subject)}: ${message}`;
+        log(result.replace(/\n\r?/g, '\n\t'));
+    } else {
+        log(`${chalk.green(subject)}: ${message}`);
+    }
 }
 
 function logIfVerbose(message) {
@@ -106,10 +111,9 @@ async function start() {
                 break;
             case 'status':
                 try {
-                    const logs = await cloudformation.runStatus();
-                    logs.forEach((message) => {
-                        console.log(message);
-                    });
+                    const output = await cloudformation.runStatus();
+                    logOk(`Status ${stackName}`, 'Stack found');
+                    logOk(`Status ${stackName}`, output, true);
                 } catch (error) {
                     logError(`Status ${stackName}`, error.message);
                 }
