@@ -1,13 +1,6 @@
 const yaml = require('node-yaml');
-const inquirer = require('inquirer');
 
 const Actions = require('./actions.js');
-
-const regions = [
-    'eu-west-1',
-    'eu-central-1',
-    'eu-west-3',
-];
 
 class Config {
     /**
@@ -31,42 +24,11 @@ class Config {
             throw new Error('"project" not found in config file');
         }
 
-        // Projects have a region.
-        if (!newConfig.region) {
-            newConfig.region = await inquirer.prompt([
-                {
-                    type: 'list',
-                    name: 'region',
-                    message: 'AWS Region: ',
-                    choices: regions,
-                },
-            ]);
-        }
-
         // Projects have stacks.
         if (!newConfig.stacks) {
             throw new Error('"stacks" not found in config file');
         } else if (Object.keys(newConfig.stacks).length === 0) {
             throw new Error('No stacks defined in config file');
-        }
-
-        // Projects have a profile to access AWS
-        // TODO Or config file? Or keys?.
-        if (!newConfig.profile) {
-            newConfig.profile = await inquirer.prompt([
-                {
-                    type: 'input',
-                    name: 'profile',
-                    message: 'Profile (~/.aws/credentials): ',
-                },
-            ]);
-        }
-
-        // Projects have environments.
-        if (!newConfig.environments) {
-            throw new Error('"environments" not found in config file. Please provide a "default" one at least.');
-        } else if (Object.keys(newConfig.environments).length === 0) {
-            throw new Error('No environments defined in config file. Please provide a "default" one at least.');
         }
 
         // Stacks might have actions.
@@ -76,6 +38,41 @@ class Config {
                     await Actions.validateAction(newConfig.stacks[stack].actions[action]);
                 }));
             }
+        }));
+
+        // Projects have environments.
+        if (!newConfig.environments) {
+            throw new Error('"environments" not found in config file. Please provide a "default" one at least.');
+        } else if (Object.keys(newConfig.environments).length === 0) {
+            throw new Error('No environments defined in config file. Please provide a "default" one at least.');
+        }
+
+        // There might be a default env params.
+        let defaultOptions = {};
+        if (newConfig.environments.default) {
+            defaultOptions = newConfig.environments.default;
+        }
+
+        // Stack in environments have profile/region.
+        await Promise.all(Object.keys(newConfig.environments).map(async (environmentName) => {
+            await Promise.all(Object.keys(newConfig.environments[environmentName]).map(async (stackName) => {
+                // Check or Fill in region.
+                if (!newConfig.environments[environmentName][stackName].region) {
+                    if (defaultOptions[stackName].region) {
+                        newConfig.environments[environmentName][stackName].region = defaultOptions[stackName].region;
+                    } else {
+                        throw new Error(`Stack ${stackName} has no region.`);
+                    }
+                }
+                // Check or fill in profile
+                if (!newConfig.environments[environmentName][stackName].profile) {
+                    if (defaultOptions[stackName].profile) {
+                        newConfig.environments[environmentName][stackName].profile = defaultOptions[stackName].profile;
+                    } else {
+                        throw new Error(`Stack ${stackName} has no profile.`);
+                    }
+                }
+            }));
         }));
 
         return newConfig;
