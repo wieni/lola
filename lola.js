@@ -32,24 +32,42 @@ function log(message) {
     console.log(`[${chalk.gray(moment().format('HH:mm:ss'))}] ${message}`);
 }
 
-if (program.verbose) {
-    log('Reading config file');
+function logError(subject, message) {
+    log(`${chalk.red(subject)}: ${message}`);
 }
 
+function logOk(subject, message) {
+    log(`${chalk.green(subject)}: ${message}`);
+}
+
+function logIfVerbose(message) {
+    if (program.verbose) {
+        log(message);
+    }
+}
+
+logIfVerbose('Reading config file');
+
 async function start() {
+    let config = {};
     try {
         // Read config file (not optional)
-        if (program.verbose) log('Reading config');
-        let config = await Config.readConfigFile(program.configFile);
-        if (program.verbose) log(config);
+        logIfVerbose('Reading config');
+        config = await Config.readConfigFile(program.configFile);
+        logIfVerbose(config);
 
         // Validate (and add stuff to) config.
-        if (program.verbose) log('Validating config');
+        logIfVerbose('Validating config');
         config = await Config.validateConfig(config);
+    } catch (err) {
+        logError('Config', err);
+    }
 
+    let options = {};
+    try {
         // Read options file (optional).
-        if (program.verbose) log('Reading options');
-        let options = await Options.readOptionsFile(program.optionsFile);
+        logIfVerbose('Reading options');
+        options = await Options.readOptionsFile(program.optionsFile);
         if (program.optionsStack) {
             options.stacks = [program.optionsStack];
         }
@@ -60,56 +78,53 @@ async function start() {
             options.action = program.optionsAction;
         }
 
-        if (program.verbose) log(options);
+        logIfVerbose(options);
 
         // Validate (and add stuff to) options.
-        if (program.verbose) log('Validating options');
+        logIfVerbose('Validating options');
         options = await Options.validateOptions(options, config);
-
-        // Banner.
-        log(chalk.yellow.bold(`Starting: ${config.project}`));
-
-        options.stacks.forEach(async (stackName) => {
-            options.environments.forEach(async (env) => {
-                const cloudformation = new Cloudformation(config, stackName, env);
-
-                switch (options.action) {
-                default:
-                case 'validate':
-                    await cloudformation.runValidate()
-                        .then(() => {
-                            log(`- Template ${chalk.green(stackName)}: Valid`);
-                        })
-                        .catch((error) => {
-                            log(`- Template ${chalk.red(stackName)}: ${error.message}`);
-                        });
-                    break;
-                case 'status':
-                    await cloudformation.runStatus()
-                        .then((logs) => {
-                            logs.forEach((message) => {
-                                console.log(message);
-                            });
-                        })
-                        .catch((error) => {
-                            log(`- ${chalk.red(stackName)}: ${error.message}`);
-                        });
-                    break;
-                case 'deploy':
-                    await cloudformation.runDeploy()
-                        .then(() => {
-                            log(`- Deploying ${chalk.green(stackName)}: Done`);
-                        })
-                        .catch((error) => {
-                            log(`- Deploying ${chalk.red(stackName)}: ${error.message}`);
-                        });
-                    break;
-                }
-            });
-        });
     } catch (err) {
-        log(chalk.red.underline(err));
+        logError('Options', err);
     }
+
+    // Banner.
+    log(chalk.yellow.bold(`Starting: ${config.project}`));
+
+    options.stacks.forEach(async (stackName) => {
+        options.environments.forEach(async (env) => {
+            const cloudformation = new Cloudformation(config, stackName, env);
+
+            switch (options.action) {
+            default:
+            case 'validate':
+                try {
+                    await cloudformation.runValidate();
+                    logOk(`Template ${stackName}`, 'Template is valid');
+                } catch (error) {
+                    logError(`Template ${stackName}`, error.message);
+                }
+                break;
+            case 'status':
+                try {
+                    const logs = await cloudformation.runStatus();
+                    logs.forEach((message) => {
+                        console.log(message);
+                    });
+                } catch (error) {
+                    logError(`Status ${stackName}`, error.message);
+                }
+                break;
+            case 'deploy':
+                try {
+                    await cloudformation.runDeploy();
+                    logOk(`Deploy ${stackName}`, 'Done');
+                } catch (error) {
+                    logError(`Deploy ${stackName}`, error.message);
+                }
+                break;
+            }
+        });
+    });
 }
 
 start();

@@ -7,13 +7,8 @@ class Config {
      * Read config from file,
      * @param {string} fileName
      */
-    static readConfigFile(fileName = '') {
-        let name = 'config.yml';
-        if (fileName !== '') {
-            name = fileName;
-        }
-
-        return yaml.read(`${process.cwd()}/${name}`);
+    static readConfigFile(fileName = 'config.yml') {
+        return yaml.read(`${process.cwd()}/${fileName}`);
     }
 
     static async validateConfig(config) {
@@ -74,6 +69,8 @@ class Config {
                 }
             }));
         }));
+
+        // Stacks in environments might have options. Validate them and/or copy over from default.
 
         return newConfig;
     }

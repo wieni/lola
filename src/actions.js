@@ -21,11 +21,7 @@ class Actions {
 
     static async validateAction(actionPath) {
         // Check if the file exists.
-        try {
-            await access(`${process.cwd()}/${actionPath}`);
-        } catch (e) {
-            throw new Error(e);
-        }
+        await access(`${process.cwd()}/${actionPath}`);
 
         const actionFile = require(`${process.cwd()}/${actionPath}`);
         if (typeof actionFile.runAction !== 'function') {
@@ -48,11 +44,7 @@ class Actions {
             context.action,
         );
         const actionFile = require(`${process.cwd()}/${actionPath}`);
-        try {
-            await actionFile.runAction(context);
-        } catch (e) {
-            throw new Error(e);
-        }
+        await actionFile.runAction(context);
     }
 }
 

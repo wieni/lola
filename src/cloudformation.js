@@ -36,78 +36,60 @@ class Cloudformation {
     }
 
     async describeStack() {
-        try {
-            const data = await this.cloudformation.describeStacks({
-                StackName: this.getFullStackName(),
-            }).promise();
-            if (data.Stacks) {
-                return data.Stacks[0];
-            }
-            return false;
-        } catch (error) {
-            throw new Error(error);
-        }
+        const data = await this.cloudformation.describeStacks({
+            StackName: this.getFullStackName(),
+        }).promise();
+        return data.Stacks[0];
     }
 
     async runStatus() {
         const result = [];
-        try {
-            const exists = await this.runExists();
-            if (!exists) {
-                result.push(`- Stack ${chalk.red(this.stackName)}: Does not exist (${this.getFullStackName()})`);
-                return result;
-            }
 
-            result.push(`- Stack ${chalk.green(this.stackName)}: Exists`);
-
-            // Get Stack Intel.
-            const stackData = await this.describeStack();
-            if (stackData) {
-                result.push(`  * StackStatus: ${stackData.StackStatus}`);
-                result.push(`  * CreationTime: ${stackData.CreationTime}`);
-                result.push(`  * EnableTerminationProtection: ${stackData.EnableTerminationProtection}`);
-
-                if (stackData.Parameters) {
-                    result.push('  * Parameters:');
-                    stackData.Parameters.forEach((element) => {
-                        result.push(`    - ${element.ParameterKey}: ${element.ParameterValue}`);
-                    });
-                }
-
-                if (stackData.Outputs) {
-                    result.push('  * Outputs:');
-                    stackData.Outputs.forEach((element) => {
-                        result.push(`    - ${element.OutputKey}: ${element.OutputValue}`);
-                    });
-                }
-
-                result.push(`  * Tags: ${stackData.Tags.join(', ')}`);
-            }
-
+        const exists = await this.runExists();
+        if (!exists) {
+            result.push(`- Stack ${chalk.red(this.stackName)}: Does not exist (${this.getFullStackName()})`);
             return result;
-        } catch (error) {
-            throw new Error(error);
         }
+
+        result.push(`- Stack ${chalk.green(this.stackName)}: Exists`);
+
+        // Get Stack Intel.
+        const stackData = await this.describeStack();
+        if (stackData) {
+            result.push(`  * StackStatus: ${stackData.StackStatus}`);
+            result.push(`  * CreationTime: ${stackData.CreationTime}`);
+            result.push(`  * EnableTerminationProtection: ${stackData.EnableTerminationProtection}`);
+
+            if (stackData.Parameters) {
+                result.push('  * Parameters:');
+                stackData.Parameters.forEach((element) => {
+                    result.push(`    - ${element.ParameterKey}: ${element.ParameterValue}`);
+                });
+            }
+
+            if (stackData.Outputs) {
+                result.push('  * Outputs:');
+                stackData.Outputs.forEach((element) => {
+                    result.push(`    - ${element.OutputKey}: ${element.OutputValue}`);
+                });
+            }
+
+            result.push(`  * Tags: ${stackData.Tags.join(', ')}`);
+        }
+
+        return result;
     }
 
     async runExists() {
-        try {
-            // Returns boolean if stack name 'foo-bar' exists
-            const exists = await cfn.stackExists({
-                name: this.getFullStackName(),
-                awsConfig: {
-                    region: this.region,
-                },
-            });
+        // Returns boolean if stack name 'foo-bar' exists
+        const exists = await cfn.stackExists({
+            name: this.getFullStackName(),
+            awsConfig: {
+                region: this.region,
+            },
+        });
 
-            if (exists) {
-                return true;
-            }
-
-            return false;
-        } catch (error) {
-            throw new Error(error);
-        }
+        return !!exists;
     }
 
     async runDeploy() {
@@ -179,29 +161,25 @@ class Cloudformation {
     }
 
     async runDelete() {
-        try {
-            const exists = await this.runExists();
-            if (!exists) {
-                throw new Error(`Tried to delete non-existing stack: ${this.stackName}`);
-            }
-
-            const data = await this.cloudformation.deleteStack({
-                StackName: this.getFullStackName(),
-            }).promise();
-            if (data.ResponseMetadata.RequestId) {
-                console.log(data);
-            }
-
-            // await cfn.delete({
-            //     name: this.getFullStackName(),
-            //     awsConfig: {
-            //         region: this.region,
-            //     },
-            // });
-            return true;
-        } catch (error) {
-            throw new Error(error);
+        const exists = await this.runExists();
+        if (!exists) {
+            throw new Error(`Tried to delete non-existing stack: ${this.stackName}`);
         }
+
+        const data = await this.cloudformation.deleteStack({
+            StackName: this.getFullStackName(),
+        }).promise();
+        if (data.ResponseMetadata.RequestId) {
+            console.log(data);
+        }
+
+        // await cfn.delete({
+        //     name: this.getFullStackName(),
+        //     awsConfig: {
+        //         region: this.region,
+        //     },
+        // });
+        return true;
     }
 
     getFullStackName() {
