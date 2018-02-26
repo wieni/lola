@@ -12,6 +12,7 @@ class Cloudformation {
 
         this.region = this.config.environments[this.env][this.stackName].region;
         this.template = this.config.stacks[this.stackName].template;
+        this.hooks = this.config.environments[this.env][this.stackName].hooks;
 
         // Set credentials from profile.
         AWS.config.credentials = new AWS.SharedIniFileCredentials({
@@ -77,8 +78,8 @@ class Cloudformation {
         }
 
         // pre-deploy hook.
-        if (this.config.environments[this.env][this.stackName].hooks['pre-deploy']) {
-            await Promise.all(this.config.environments[this.env][this.stackName].hooks['pre-deploy'].map(async (action) => {
+        if (this.hooks && this.hooks['pre-deploy']) {
+            await Promise.all(this.hooks['pre-deploy'].map(async (action) => {
                 try {
                     await Actions.runAction({
                         config: this.config,
@@ -116,8 +117,8 @@ class Cloudformation {
         stackData = await this.describeStack();
 
         // post-deploy hook.
-        if (this.config.environments[this.env][this.stackName].hooks['post-deploy']) {
-            await Promise.all(this.config.environments[this.env][this.stackName].hooks['post-deploy'].map(async (action) => {
+        if (this.hooks && this.hooks['post-deploy']) {
+            await Promise.all(this.hooks['post-deploy'].map(async (action) => {
                 try {
                     await Actions.runAction({
                         config: this.config,

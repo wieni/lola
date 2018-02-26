@@ -38,7 +38,7 @@ function logError(subject, message) {
 
 function logOk(subject, message, indent = false) {
     if (indent) {
-        let result = `${chalk.green(subject)}: ${message}`;
+        const result = `${chalk.green(subject)}: ${message}`;
         log(result.replace(/\n\r?/g, '\n\t'));
     } else {
         log(`${chalk.green(subject)}: ${message}`);
