@@ -10,15 +10,21 @@ class Cloudformation {
         this.stackName = stackName;
         this.env = env;
 
+        // Set credentials from profile.
+        AWS.config.credentials = new AWS.SharedIniFileCredentials({
+            profile: this.config.environments[this.env][this.stackName].profile,
+            region: this.config.environments[this.env][this.stackName].region,
+        });
+
         this.cloudformation = new AWS.CloudFormation({
-            region: config.region,
+            region: this.config.environments[this.env][this.stackName].region,
         });
     }
 
     async runValidate() {
         try {
             await cfn.validate(
-                this.config.region,
+                this.config.environments[this.env][this.stackName].region,
                 this.config.stacks[this.stackName].template,
             );
         } catch (error) {
@@ -87,7 +93,7 @@ class Cloudformation {
             const exists = await cfn.stackExists({
                 name: this.getFullStackName(),
                 awsConfig: {
-                    region: this.config.region,
+                    region: this.config.environments[this.env][this.stackName].region,
                 },
             });
 
@@ -104,9 +110,14 @@ class Cloudformation {
     async runDeploy() {
         try {
             // Does template validate?
-            await this.runValidate();
+            const exists = await this.runExists();
 
-            let stackData = await this.describeStack();
+            let stackData = {};
+            if (!exists) {
+                console.warn('Stack does not exist, creating');
+            } else {
+                stackData = await this.describeStack();
+            }
 
             // pre-deploy hook.
             if (this.config.environments[this.env][this.stackName].hooks['pre-deploy']) {

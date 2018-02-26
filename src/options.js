@@ -49,11 +49,14 @@ class Options {
         // Environments.
         const allowedEnvs = [];
         Object.keys(config.environments).forEach((env) => {
-            deployOptions.stacks.forEach((name) => {
-                if (config.environments[env][name]) {
-                    allowedEnvs.push(env);
-                }
-            });
+            // Default is reserved env.
+            if (env !== 'default') {
+                deployOptions.stacks.forEach((name) => {
+                    if (config.environments[env][name]) {
+                        allowedEnvs.push(env);
+                    }
+                });
+            }
         });
         if (deployOptions.environments) {
             // TODO Validate them.

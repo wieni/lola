@@ -3,7 +3,6 @@ const program = require('commander');
 const chalk = require('chalk');
 const moment = require('moment');
 const semver = require('semver');
-const AWS = require('aws-sdk');
 
 const { engines } = require('./package');
 const Config = require('./src/config.js');
@@ -47,13 +46,6 @@ async function start() {
         // Validate (and add stuff to) config.
         if (program.verbose) log('Validating config');
         config = await Config.validateConfig(config);
-
-        // Set credentials from profile.
-        AWS.config.credentials = new AWS.SharedIniFileCredentials({ profile: config.profile });
-        if (AWS.config.credentials.accessKeyId === undefined) {
-            console.log(`Got no Access Key for profile ${config.profile}. Unable to connect.`);
-            process.exit(1);
-        }
 
         // Read options file (optional).
         if (program.verbose) log('Reading options');
