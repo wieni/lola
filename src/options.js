@@ -15,10 +15,7 @@ class Options {
      * @param {string} fileName
      */
     static readOptionsFile(fileName = '') {
-        if (fileName !== '') {
-            return yaml.read(`${process.cwd()}/${fileName}`);
-        }
-        return {};
+        return fileName ? yaml.read(`${process.cwd()}/${fileName}`) : {};
     }
 
     static async validateOptions(options, config) {

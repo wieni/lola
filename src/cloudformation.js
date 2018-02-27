@@ -1,6 +1,6 @@
 const cfn = require('cfn');
-const chalk = require('chalk');
 const AWS = require('aws-sdk');
+const yaml = require('node-yaml');
 
 const Actions = require('./actions.js');
 
@@ -12,6 +12,7 @@ class Cloudformation {
 
         this.region = this.config.environments[this.env][this.stackName].region;
         this.template = this.config.stacks[this.stackName].template;
+        this.hooks = this.config.environments[this.env][this.stackName].hooks;
 
         // Set credentials from profile.
         AWS.config.credentials = new AWS.SharedIniFileCredentials({
@@ -36,78 +37,33 @@ class Cloudformation {
     }
 
     async describeStack() {
-        try {
-            const data = await this.cloudformation.describeStacks({
-                StackName: this.getFullStackName(),
-            }).promise();
-            if (data.Stacks) {
-                return data.Stacks[0];
-            }
-            return false;
-        } catch (error) {
-            throw new Error(error);
-        }
+        const data = await this.cloudformation.describeStacks({
+            StackName: this.getFullStackName(),
+        }).promise();
+        return data.Stacks[0];
     }
 
     async runStatus() {
-        const result = [];
-        try {
-            const exists = await this.runExists();
-            if (!exists) {
-                result.push(`- Stack ${chalk.red(this.stackName)}: Does not exist (${this.getFullStackName()})`);
-                return result;
-            }
-
-            result.push(`- Stack ${chalk.green(this.stackName)}: Exists`);
-
-            // Get Stack Intel.
-            const stackData = await this.describeStack();
-            if (stackData) {
-                result.push(`  * StackStatus: ${stackData.StackStatus}`);
-                result.push(`  * CreationTime: ${stackData.CreationTime}`);
-                result.push(`  * EnableTerminationProtection: ${stackData.EnableTerminationProtection}`);
-
-                if (stackData.Parameters) {
-                    result.push('  * Parameters:');
-                    stackData.Parameters.forEach((element) => {
-                        result.push(`    - ${element.ParameterKey}: ${element.ParameterValue}`);
-                    });
-                }
-
-                if (stackData.Outputs) {
-                    result.push('  * Outputs:');
-                    stackData.Outputs.forEach((element) => {
-                        result.push(`    - ${element.OutputKey}: ${element.OutputValue}`);
-                    });
-                }
-
-                result.push(`  * Tags: ${stackData.Tags.join(', ')}`);
-            }
-
-            return result;
-        } catch (error) {
-            throw new Error(error);
+        const exists = await this.runExists();
+        if (!exists) {
+            throw new Error('Does not exist');
         }
+
+        // Get Stack Intel.
+        const stackData = await this.describeStack();
+        return yaml.dump(stackData);
     }
 
     async runExists() {
-        try {
-            // Returns boolean if stack name 'foo-bar' exists
-            const exists = await cfn.stackExists({
-                name: this.getFullStackName(),
-                awsConfig: {
-                    region: this.region,
-                },
-            });
+        // Returns boolean if stack name 'foo-bar' exists
+        const exists = await cfn.stackExists({
+            name: this.getFullStackName(),
+            awsConfig: {
+                region: this.region,
+            },
+        });
 
-            if (exists) {
-                return true;
-            }
-
-            return false;
-        } catch (error) {
-            throw new Error(error);
-        }
+        return !!exists;
     }
 
     async runDeploy() {
@@ -122,8 +78,8 @@ class Cloudformation {
         }
 
         // pre-deploy hook.
-        if (this.config.environments[this.env][this.stackName].hooks['pre-deploy']) {
-            await Promise.all(this.config.environments[this.env][this.stackName].hooks['pre-deploy'].map(async (action) => {
+        if (this.hooks && this.hooks['pre-deploy']) {
+            await Promise.all(this.hooks['pre-deploy'].map(async (action) => {
                 try {
                     await Actions.runAction({
                         config: this.config,
@@ -161,8 +117,8 @@ class Cloudformation {
         stackData = await this.describeStack();
 
         // post-deploy hook.
-        if (this.config.environments[this.env][this.stackName].hooks['post-deploy']) {
-            await Promise.all(this.config.environments[this.env][this.stackName].hooks['post-deploy'].map(async (action) => {
+        if (this.hooks && this.hooks['post-deploy']) {
+            await Promise.all(this.hooks['post-deploy'].map(async (action) => {
                 try {
                     await Actions.runAction({
                         config: this.config,
@@ -179,29 +135,25 @@ class Cloudformation {
     }
 
     async runDelete() {
-        try {
-            const exists = await this.runExists();
-            if (!exists) {
-                throw new Error(`Tried to delete non-existing stack: ${this.stackName}`);
-            }
-
-            const data = await this.cloudformation.deleteStack({
-                StackName: this.getFullStackName(),
-            }).promise();
-            if (data.ResponseMetadata.RequestId) {
-                console.log(data);
-            }
-
-            // await cfn.delete({
-            //     name: this.getFullStackName(),
-            //     awsConfig: {
-            //         region: this.region,
-            //     },
-            // });
-            return true;
-        } catch (error) {
-            throw new Error(error);
+        const exists = await this.runExists();
+        if (!exists) {
+            throw new Error(`Tried to delete non-existing stack: ${this.stackName}`);
         }
+
+        const data = await this.cloudformation.deleteStack({
+            StackName: this.getFullStackName(),
+        }).promise();
+        if (data.ResponseMetadata.RequestId) {
+            console.log(data);
+        }
+
+        // await cfn.delete({
+        //     name: this.getFullStackName(),
+        //     awsConfig: {
+        //         region: this.region,
+        //     },
+        // });
+        return true;
     }
 
     getFullStackName() {
