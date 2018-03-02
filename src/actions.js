@@ -23,9 +23,14 @@ class Actions {
         // Check if the file exists.
         await access(`${process.cwd()}/${actionPath}`);
 
-        const actionFile = require(`${process.cwd()}/${actionPath}`);
-        if (typeof actionFile.runAction !== 'function') {
-            throw new Error(`runAction() function not found in ${actionPath}`);
+        try {
+            const actionFile = require(`${process.cwd()}/${actionPath}`);
+
+            if (typeof actionFile.runAction !== 'function') {
+                throw new Error(`runAction() function not found in ${actionPath}`);
+            }
+        } catch (error) {
+            throw new Error(`${actionPath}: ${error}`);
         }
     }
 
