@@ -10,15 +10,10 @@ class Cloudformation {
         this.stackName = stackName;
         this.env = env;
 
+        this.profile = this.config.environments[this.env][this.stackName].profile;
         this.region = this.config.environments[this.env][this.stackName].region;
         this.template = this.config.stacks[this.stackName].template;
         this.hooks = this.config.environments[this.env][this.stackName].hooks;
-
-        // Set credentials from profile.
-        AWS.config.credentials = new AWS.SharedIniFileCredentials({
-            profile: this.config.environments[this.env][this.stackName].profile,
-            region: this.region,
-        });
 
         this.cloudformation = new AWS.CloudFormation({
             region: this.region,

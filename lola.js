@@ -3,8 +3,11 @@ const program = require('commander');
 const chalk = require('chalk');
 const moment = require('moment');
 const semver = require('semver');
+const AWS = require('aws-sdk');
 
 const { engines } = require('./package');
+
+const AwsCredentials = require('./src/awsCredentials.js');
 const Config = require('./src/config.js');
 const Options = require('./src/options.js');
 const Cloudformation = require('./src/cloudformation.js');
@@ -97,6 +100,10 @@ async function start() {
 
     options.stacks.forEach(async (stackName) => {
         options.environments.forEach(async (env) => {
+            // Set credentials. Do it each time again since this can switch per stack/env.
+            AWS.config.credentials = await AwsCredentials.loadCredentials(config, stackName, env);
+
+            // Run said action.
             const cloudformation = new Cloudformation(config, stackName, env);
 
             switch (options.action) {
