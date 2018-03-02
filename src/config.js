@@ -51,29 +51,32 @@ class Config {
         // Stack in environments have profile/region.
         await Promise.all(Object.keys(newConfig.environments).map(async (environmentName) => {
             await Promise.all(Object.keys(newConfig.environments[environmentName]).map(async (stackName) => {
-                // Check or Fill in region.
-                if (!newConfig.environments[environmentName][stackName].region) {
-                    if (defaultOptions[stackName].region) {
+                if (defaultOptions[stackName]) {
+                    // Fill in region.
+                    if (!newConfig.environments[environmentName][stackName].region &&
+                        defaultOptions[stackName].region
+                    ) {
                         newConfig.environments[environmentName][stackName].region = defaultOptions[stackName].region;
-                    } else {
-                        throw new Error(`Stack ${stackName} has no region.`);
                     }
-                }
-                // Check or fill in profile.
-                if (!newConfig.environments[environmentName][stackName].profile) {
-                    if (defaultOptions[stackName].profile) {
+                    // Fill in profile.
+                    if (!newConfig.environments[environmentName][stackName].profile &&
+                        defaultOptions[stackName].profile
+                    ) {
                         newConfig.environments[environmentName][stackName].profile = defaultOptions[stackName].profile;
-                    } else {
-                        throw new Error(`Stack ${stackName} has no profile.`);
+                    }
+                    // Fill in actions.
+                    if (!newConfig.environments[environmentName][stackName].hooks &&
+                        defaultOptions[stackName].hooks
+                    ) {
+                        newConfig.environments[environmentName][stackName].hooks = defaultOptions[stackName].hooks;
                     }
                 }
-                // Fill in actions from default, if nothing present ont he current env
-                if (newConfig.environments[environmentName][stackName] &&
-                    defaultOptions[stackName] &&
-                    !newConfig.environments[environmentName][stackName].hooks &&
-                    defaultOptions[stackName].hooks
-                ) {
-                    newConfig.environments[environmentName][stackName].hooks = defaultOptions[stackName].hooks;
+
+                if (!newConfig.environments[environmentName][stackName].region) {
+                    throw new Error(`Stack ${stackName} has no region in ${environmentName}`);
+                }
+                if (!newConfig.environments[environmentName][stackName].profile) {
+                    throw new Error(`Stack ${stackName} has no profile in ${environmentName}`);
                 }
             }));
         }));
