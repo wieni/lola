@@ -7,7 +7,7 @@ class Config {
      * Read config from file,
      * @param {string} fileName
      */
-    static readConfigFile(fileName = 'config.yml') {
+    static readConfigFile(fileName = 'lola.yml') {
         return yaml.read(`${process.cwd()}/${fileName}`);
     }
 
@@ -37,9 +37,9 @@ class Config {
 
         // Projects have environments.
         if (!newConfig.environments) {
-            throw new Error('"environments" not found in config file. Please provide a "default" one at least.');
+            throw new Error('"environments" not found in config file. Please provide a "standard" one at least.');
         } else if (Object.keys(newConfig.environments).length === 0) {
-            throw new Error('No environments defined in config file. Please provide a "default" one at least.');
+            throw new Error('No environments defined in config file. Please provide a "standard" one at least.');
         }
 
         // There might be a default env params.
