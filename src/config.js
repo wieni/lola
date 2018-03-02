@@ -59,13 +59,21 @@ class Config {
                         throw new Error(`Stack ${stackName} has no region.`);
                     }
                 }
-                // Check or fill in profile
+                // Check or fill in profile.
                 if (!newConfig.environments[environmentName][stackName].profile) {
                     if (defaultOptions[stackName].profile) {
                         newConfig.environments[environmentName][stackName].profile = defaultOptions[stackName].profile;
                     } else {
                         throw new Error(`Stack ${stackName} has no profile.`);
                     }
+                }
+                // Fill in actions from default, if nothing present ont he current env
+                if (newConfig.environments[environmentName][stackName] &&
+                    defaultOptions[stackName] &&
+                    !newConfig.environments[environmentName][stackName].hooks &&
+                    defaultOptions[stackName].hooks
+                ) {
+                    newConfig.environments[environmentName][stackName].hooks = defaultOptions[stackName].hooks;
                 }
             }));
         }));
