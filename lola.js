@@ -25,12 +25,12 @@ async function start(command) {
     let config = {};
     try {
         // Read config file (not optional)
-        Helpers.logIfVerbose('Reading config');
+        Helpers.logIfVerbose('Reading config', program.verbose);
         config = await Config.readConfigFile(program.configFile);
-        Helpers.logIfVerbose(config);
+        Helpers.logIfVerbose(config, program.verbose);
 
         // Validate (and add stuff to) config.
-        Helpers.logIfVerbose('Validating config');
+        Helpers.logIfVerbose('Validating config', program.verbose);
         config = await Config.validateConfig(config);
     } catch (err) {
         Helpers.logError('Config', err);
@@ -39,7 +39,7 @@ async function start(command) {
     let options = {};
     try {
         // Read options file (optional).
-        Helpers.logIfVerbose('Reading options');
+        Helpers.logIfVerbose('Reading options', program.verbose);
         options = await Options.readOptionsFile(program.optionsFile);
         if (program.optionsStack) {
             options.stacks = [program.optionsStack];
@@ -48,10 +48,10 @@ async function start(command) {
             options.environments = [program.optionsEnvironment];
         }
 
-        Helpers.logIfVerbose(options);
+        Helpers.logIfVerbose(options, program.verbose);
 
         // Validate (and add stuff to) options.
-        Helpers.logIfVerbose('Validating options');
+        Helpers.logIfVerbose('Validating options', program.verbose);
         options = await Options.validateOptions(options, config);
     } catch (err) {
         Helpers.logError('Options', err);
