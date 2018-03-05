@@ -19,24 +19,9 @@ if (!semver.satisfies(process.version, version)) {
     process.exit(1);
 }
 
-// Read input.
-program
-    .version('0.0.1')
-    .description('Do AWS Stuff')
-    .option('-c, --config-file <configFile>', 'Optional config file')
-    .option('-o, --options-file <optionsFile>', 'Optional deploy options file')
-    .option('-v, --verbose', 'Verbose output')
-    .option('-s, --options-stack <optionsStack>', 'Stack')
-    .option('-e, --options-environment <optionsEnvironment>', 'Environment')
-    .option('-a, --options-action <optionsaction>', 'Action')
-    .parse(process.argv);
-    }
-}
+async function start(command) {
+    Helpers.logIfVerbose('Reading config file', program.verbose);
 
-    Helpers.logIfVerbose('Reading config file');
-
-
-async function start() {
     let config = {};
     try {
         // Read config file (not optional)
@@ -62,9 +47,6 @@ async function start() {
         if (program.optionsEnvironment) {
             options.environments = [program.optionsEnvironment];
         }
-        if (program.optionsAction) {
-            options.action = program.optionsAction;
-        }
 
         Helpers.logIfVerbose(options);
 
@@ -86,7 +68,7 @@ async function start() {
             // Run said action.
             const cloudformation = new Cloudformation(config, stackName, env);
 
-            switch (options.action) {
+            switch (command) {
             default:
             case 'validate':
                 try {
@@ -118,4 +100,44 @@ async function start() {
     });
 }
 
-start();
+program
+    .version('0.0.1')
+    .description('Do AWS Stuff')
+    .option('-c, --config-file <configFile>', 'Optional config file')
+    .option('-o, --options-file <optionsFile>', 'Optional deploy options file')
+    .option('-v, --verbose', 'Verbose output')
+    .option('-s, --options-stack <optionsStack>', 'Stack')
+    .option('-e, --options-environment <optionsEnvironment>', 'Environment');
+
+program
+    .command('validate')
+    .alias('v')
+    .description('Validates a stack')
+    .action(() => {
+        start('validate');
+    });
+
+program
+    .command('status')
+    .alias('s')
+    .description('Get the status of a stack')
+    .action(() => {
+        start('status');
+    });
+
+program
+    .command('deploy')
+    .alias('d')
+    .description('Deploys a stack')
+    .action(() => {
+        start('deploy');
+    });
+
+// Require a command.
+if (process.argv[2] === undefined) {
+    program.outputHelp();
+    process.exit(1);
+}
+
+program.parse(process.argv);
+
