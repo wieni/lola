@@ -1,23 +1,13 @@
 #!/usr/bin/env node
 const program = require('commander');
 const chalk = require('chalk');
-const semver = require('semver');
 const AWS = require('aws-sdk');
-
-const { engines } = require('./package');
 
 const Logging = require('./src/logging.js');
 const AwsCredentials = require('./src/awsCredentials.js');
 const Config = require('./src/config.js');
 const Options = require('./src/options.js');
 const Cloudformation = require('./src/cloudformation.js');
-
-// Check node version.
-const version = engines.node;
-if (!semver.satisfies(process.version, version)) {
-    console.log(`Required node version ${version} not satisfied with current version ${process.version}.`);
-    process.exit(1);
-}
 
 async function start(command) {
     Logging.logIfVerbose('Reading config file', program.verbose);
