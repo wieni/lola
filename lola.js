@@ -18,12 +18,18 @@ async function start(command) {
         Logging.logIfVerbose('Reading config', program.verbose);
         config = await Config.readConfigFile(program.configFile);
         Logging.logIfVerbose(config, program.verbose);
+    } catch (err) {
+        Logging.logError('Config', err);
+        process.exit(1);
+    }
 
+    try {
         // Validate (and add stuff to) config.
         Logging.logIfVerbose('Validating config', program.verbose);
         config = await Config.validateConfig(config);
     } catch (err) {
         Logging.logError('Config', err);
+        process.exit(1);
     }
 
     let options = {};
