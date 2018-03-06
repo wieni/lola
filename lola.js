@@ -6,7 +6,7 @@ const AWS = require('aws-sdk');
 
 const { engines } = require('./package');
 
-const Helpers = require('./src/helpers.js');
+const Logging = require('./src/logging.js');
 const AwsCredentials = require('./src/awsCredentials.js');
 const Config = require('./src/config.js');
 const Options = require('./src/options.js');
@@ -20,26 +20,26 @@ if (!semver.satisfies(process.version, version)) {
 }
 
 async function start(command) {
-    Helpers.logIfVerbose('Reading config file', program.verbose);
+    Logging.logIfVerbose('Reading config file', program.verbose);
 
     let config = {};
     try {
         // Read config file (not optional)
-        Helpers.logIfVerbose('Reading config', program.verbose);
+        Logging.logIfVerbose('Reading config', program.verbose);
         config = await Config.readConfigFile(program.configFile);
-        Helpers.logIfVerbose(config, program.verbose);
+        Logging.logIfVerbose(config, program.verbose);
 
         // Validate (and add stuff to) config.
-        Helpers.logIfVerbose('Validating config', program.verbose);
+        Logging.logIfVerbose('Validating config', program.verbose);
         config = await Config.validateConfig(config);
     } catch (err) {
-        Helpers.logError('Config', err);
+        Logging.logError('Config', err);
     }
 
     let options = {};
     try {
         // Read options file (optional).
-        Helpers.logIfVerbose('Reading options', program.verbose);
+        Logging.logIfVerbose('Reading options', program.verbose);
         options = await Options.readOptionsFile(program.optionsFile);
         if (program.optionsStack) {
             options.stacks = [program.optionsStack];
@@ -48,17 +48,17 @@ async function start(command) {
             options.environments = [program.optionsEnvironment];
         }
 
-        Helpers.logIfVerbose(options, program.verbose);
+        Logging.logIfVerbose(options, program.verbose);
 
         // Validate (and add stuff to) options.
-        Helpers.logIfVerbose('Validating options', program.verbose);
+        Logging.logIfVerbose('Validating options', program.verbose);
         options = await Options.validateOptions(options, config);
     } catch (err) {
-        Helpers.logError('Options', err);
+        Logging.logError('Options', err);
     }
 
     // Banner.
-    Helpers.log(chalk.yellow.bold(`Starting: ${config.project}`));
+    Logging.log(chalk.yellow.bold(`Starting: ${config.project}`));
 
     options.stacks.forEach(async (stackName) => {
         options.environments.forEach(async (env) => {
@@ -70,27 +70,33 @@ async function start(command) {
 
             switch (command) {
             default:
+                Logging.logError('Unknown command', command);
+                break;
             case 'validate':
                 try {
                     await cloudformation.runValidate();
-                    Helpers.logOk(`Template ${stackName}`, 'Template is valid');
+                    Logging.logOk(`Template ${stackName}`, 'Template is valid');
                 } catch (error) {
-                    Helpers.logError(`Template ${stackName}`, error.message);
+                    Logging.logError(`Template ${stackName}`, error.message);
                 }
                 break;
             case 'status':
                 try {
                     const output = await cloudformation.runStatus();
-                    Helpers.logOk(`Status ${stackName}`, 'Stack found');
-                    Helpers.logOk(`Status ${stackName}`, output, true);
+                    Logging.logOk(`Status ${stackName}`, 'Stack found');
+                    Logging.logOk(`Status ${stackName}`, output, true);
                 } catch (error) {
-                    Helpers.logError(`Status ${stackName}`, error.message);
+                    Logging.logError(`Status ${stackName}`, error.message);
                 }
                 break;
             case 'deploy':
                 try {
                     await cloudformation.runDeploy();
-                    Helpers.logOk(`Deploy ${stackName}`, 'Done');
+                    Logging.logOk(`Deploy ${stackName}`, 'Done');
+                } catch (error) {
+                    Logging.logError(`Deploy ${stackName}`, error.message);
+                }
+                break;
                 } catch (error) {
                     Helpers.logError(`Deploy ${stackName}`, error.message);
                 }

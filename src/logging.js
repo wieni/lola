@@ -2,10 +2,10 @@ const chalk = require('chalk');
 const moment = require('moment');
 
 /**
- * Lola helper functions.
+ * Lola logging functions.
  *
 */
-class Helpers {
+class Logging {
     static async log(message) {
         console.log(`[${chalk.gray(moment().format('HH:mm:ss'))}] ${message}`);
     }
@@ -30,4 +30,4 @@ class Helpers {
     }
 }
 
-module.exports = Helpers;
+module.exports = Logging;
