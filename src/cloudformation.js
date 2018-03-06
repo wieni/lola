@@ -77,13 +77,18 @@ class Cloudformation {
         if (this.hooks && this.hooks['pre-deploy']) {
             await Promise.all(this.hooks['pre-deploy'].map(async (action) => {
                 try {
-                    await Actions.runAction({
+                    const newContext = await Actions.runAction({
                         config: this.config,
                         stackName: this.stackName,
                         env: this.env,
                         action,
                         outputs: stackData,
                     });
+                    // TODO: SHould validate this!
+                    if (newContext && newContext.config) {
+                        console.log(newContext);
+                        this.config = newContext.config;
+                    }
                 } catch (err) {
                     throw new Error(`pre-deploy: ${err}`);
                 }

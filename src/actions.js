@@ -49,7 +49,7 @@ class Actions {
             context.action,
         );
         const actionFile = require(`${process.cwd()}/${actionPath}`);
-        await actionFile.runAction(context);
+        return actionFile.runAction(context);
     }
 }
 
