@@ -155,6 +155,36 @@ class Cloudformation {
         }
     }
 
+    async runAction() {
+        // Get all actions for this stack.
+        if (!this.config.stacks[this.stackName].actions || this.config.stacks[this.stackName].actions.length === 0) {
+            throw new Error(`No actions found for ${this.stackName}`);
+        }
+
+        const input = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'action',
+                message: 'Action: ',
+                choices: Object.keys(this.config.stacks[this.stackName].actions),
+            },
+        ]);
+
+        const stackData = await this.describeStack();
+
+        try {
+            return await Actions.runAction({
+                config: this.config,
+                stackName: this.stackName,
+                env: this.env,
+                action: input.action,
+                outputs: stackData,
+            });
+        } catch (err) {
+            throw new Error(err);
+        }
+    }
+
     getFullStackName() {
         let result = `${this.config.project}-${this.stackName}-${this.env}`;
         result = result.toLowerCase();

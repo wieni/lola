@@ -10,6 +10,7 @@ Lola is an opiniated tool to do stuff within the AWS Cloud. The main focus is on
 
 1. Clone the repo
 2. ```yarn install```
+3. npm link
 
 ## Usage
 
@@ -23,8 +24,7 @@ This is the main project file. Lola reads this file to get a grip on what you wa
 project: <project-name>
 
 # Region and profile are not required but will be asked if not present.
-region: <aws region>
-profile: <~/.aws/credentails profile name>
+
 
 # Stacks is a description of the different cloudformation stacks you'll want to
 # manage and the specific order in which they'll need to be managed.
@@ -36,12 +36,19 @@ stacks:
             preDeploy: preDeployScript.js
 
 environments:
+    # This is reserved, you can set global stuff for each stack in each env
+    default:
+        <stack1>:
+            # This will override ANY region/profile for stack1 in ANY env below
+            region: <aws region>
+            profile: <~/.aws/credentails profile name>
     # Give that environment a name.
     <dev>:
         # Environment params for <stack1>
         <stack1>:
             # Override the stackname for this env. Optional, if not present lola generates one.
             name: <my-stack-dev>
+            terminationProtection: <true|false>
             params:
                 <Param1>: <Value1>
             hooks:
@@ -55,7 +62,6 @@ There are some choices to be made when running lola:
 
 * Which stacks you want to apply your action on
 * Which env (if any) you want to apply your action on
-* Which action you want to run
 
 These will be asked when running lola but can also be provided through an input file (-o flag) or other input flags.
 

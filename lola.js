@@ -101,6 +101,14 @@ async function start(command) {
                     Logging.logError(`Delete ${stackName}`, error.message);
                 }
                 break;
+            case 'action':
+                try {
+                    await cloudformation.runAction();
+                    Logging.logOk(`Running action on ${stackName}`, 'Done');
+                } catch (error) {
+                    Logging.logError(`Error running action on ${stackName}`, error.message);
+                }
+                break;
             }
         });
     });
@@ -145,6 +153,14 @@ program
     .description('Deletes a stack')
     .action(() => {
         start('delete');
+    });
+
+program
+    .command('action')
+    .alias('a')
+    .description('Runs an action on a stack/env')
+    .action(() => {
+        start('action');
     });
 
 // Require a command.
