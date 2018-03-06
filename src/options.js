@@ -1,12 +1,6 @@
 const yaml = require('node-yaml');
 const inquirer = require('inquirer');
 
-const actions = [
-    'validate',
-    'deploy',
-    'status',
-];
-
 const all = '*all*';
 
 class Options {
@@ -77,18 +71,6 @@ class Options {
                 throw new Error(`Environment not found in config file: ${name}`);
             }
         });
-
-        if (!deployOptions.action) {
-            deployOptions.action = await inquirer.prompt([
-                {
-                    type: 'list',
-                    name: 'action',
-                    message: 'Action: ',
-                    choices: actions,
-                },
-            ]);
-            deployOptions.action = deployOptions.action.action;
-        }
 
         return deployOptions;
     }

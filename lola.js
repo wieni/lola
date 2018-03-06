@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 const program = require('commander');
 const chalk = require('chalk');
-const moment = require('moment');
 const semver = require('semver');
 const AWS = require('aws-sdk');
 
 const { engines } = require('./package');
 
+const Logging = require('./src/logging.js');
 const AwsCredentials = require('./src/awsCredentials.js');
 const Config = require('./src/config.js');
 const Options = require('./src/options.js');
@@ -19,62 +19,27 @@ if (!semver.satisfies(process.version, version)) {
     process.exit(1);
 }
 
-// Read input.
-program
-    .version('0.0.1')
-    .description('Do AWS Stuff')
-    .option('-c, --config-file <configFile>', 'Optional config file')
-    .option('-o, --options-file <optionsFile>', 'Optional deploy options file')
-    .option('-v, --verbose', 'Verbose output')
-    .option('-s, --options-stack <optionsStack>', 'Stack')
-    .option('-e, --options-environment <optionsEnvironment>', 'Environment')
-    .option('-a, --options-action <optionsaction>', 'Action')
-    .parse(process.argv);
+async function start(command) {
+    Logging.logIfVerbose('Reading config file', program.verbose);
 
-function log(message) {
-    console.log(`[${chalk.gray(moment().format('HH:mm:ss'))}] ${message}`);
-}
-
-function logError(subject, message) {
-    log(`${chalk.red(subject)}: ${message}`);
-}
-
-function logOk(subject, message, indent = false) {
-    if (indent) {
-        const result = `${chalk.green(subject)}: ${message}`;
-        log(result.replace(/\n\r?/g, '\n\t'));
-    } else {
-        log(`${chalk.green(subject)}: ${message}`);
-    }
-}
-
-function logIfVerbose(message) {
-    if (program.verbose) {
-        log(message);
-    }
-}
-
-logIfVerbose('Reading config file');
-
-async function start() {
     let config = {};
     try {
         // Read config file (not optional)
-        logIfVerbose('Reading config');
+        Logging.logIfVerbose('Reading config', program.verbose);
         config = await Config.readConfigFile(program.configFile);
-        logIfVerbose(config);
+        Logging.logIfVerbose(config, program.verbose);
 
         // Validate (and add stuff to) config.
-        logIfVerbose('Validating config');
+        Logging.logIfVerbose('Validating config', program.verbose);
         config = await Config.validateConfig(config);
     } catch (err) {
-        logError('Config', err);
+        Logging.logError('Config', err);
     }
 
     let options = {};
     try {
         // Read options file (optional).
-        logIfVerbose('Reading options');
+        Logging.logIfVerbose('Reading options', program.verbose);
         options = await Options.readOptionsFile(program.optionsFile);
         if (program.optionsStack) {
             options.stacks = [program.optionsStack];
@@ -82,21 +47,18 @@ async function start() {
         if (program.optionsEnvironment) {
             options.environments = [program.optionsEnvironment];
         }
-        if (program.optionsAction) {
-            options.action = program.optionsAction;
-        }
 
-        logIfVerbose(options);
+        Logging.logIfVerbose(options, program.verbose);
 
         // Validate (and add stuff to) options.
-        logIfVerbose('Validating options');
+        Logging.logIfVerbose('Validating options', program.verbose);
         options = await Options.validateOptions(options, config);
     } catch (err) {
-        logError('Options', err);
+        Logging.logError('Options', err);
     }
 
     // Banner.
-    log(chalk.yellow.bold(`Starting: ${config.project}`));
+    Logging.log(chalk.yellow.bold(`Starting: ${config.project}`));
 
     options.stacks.forEach(async (stackName) => {
         options.environments.forEach(async (env) => {
@@ -106,31 +68,37 @@ async function start() {
             // Run said action.
             const cloudformation = new Cloudformation(config, stackName, env);
 
-            switch (options.action) {
+            switch (command) {
             default:
+                Logging.logError('Unknown command', command);
+                break;
             case 'validate':
                 try {
                     await cloudformation.runValidate();
-                    logOk(`Template ${stackName}`, 'Template is valid');
+                    Logging.logOk(`Template ${stackName}`, 'Template is valid');
                 } catch (error) {
-                    logError(`Template ${stackName}`, error.message);
+                    Logging.logError(`Template ${stackName}`, error.message);
                 }
                 break;
             case 'status':
                 try {
                     const output = await cloudformation.runStatus();
-                    logOk(`Status ${stackName}`, 'Stack found');
-                    logOk(`Status ${stackName}`, output, true);
+                    Logging.logOk(`Status ${stackName}`, 'Stack found');
+                    Logging.logOk(`Status ${stackName}`, output, true);
                 } catch (error) {
-                    logError(`Status ${stackName}`, error.message);
+                    Logging.logError(`Status ${stackName}`, error.message);
                 }
                 break;
             case 'deploy':
                 try {
                     await cloudformation.runDeploy();
-                    logOk(`Deploy ${stackName}`, 'Done');
+                    Logging.logOk(`Deploy ${stackName}`, 'Done');
                 } catch (error) {
-                    logError(`Deploy ${stackName}`, error.message);
+                    Logging.logError(`Deploy ${stackName}`, error.message);
+                }
+                break;
+                } catch (error) {
+                    Helpers.logError(`Deploy ${stackName}`, error.message);
                 }
                 break;
             }
@@ -138,4 +106,44 @@ async function start() {
     });
 }
 
-start();
+program
+    .version('0.0.1')
+    .description('Do AWS Stuff')
+    .option('-c, --config-file <configFile>', 'Optional config file')
+    .option('-o, --options-file <optionsFile>', 'Optional deploy options file')
+    .option('-v, --verbose', 'Verbose output')
+    .option('-s, --options-stack <optionsStack>', 'Stack')
+    .option('-e, --options-environment <optionsEnvironment>', 'Environment');
+
+program
+    .command('validate')
+    .alias('v')
+    .description('Validates a stack')
+    .action(() => {
+        start('validate');
+    });
+
+program
+    .command('status')
+    .alias('s')
+    .description('Get the status of a stack')
+    .action(() => {
+        start('status');
+    });
+
+program
+    .command('deploy')
+    .alias('d')
+    .description('Deploys a stack')
+    .action(() => {
+        start('deploy');
+    });
+
+// Require a command.
+if (process.argv[2] === undefined) {
+    program.outputHelp();
+    process.exit(1);
+}
+
+program.parse(process.argv);
+
