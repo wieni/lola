@@ -1,6 +1,7 @@
 const cfn = require('cfn');
 const AWS = require('aws-sdk');
 const yaml = require('node-yaml');
+const inquirer = require('inquirer');
 
 const Actions = require('./actions.js');
 
@@ -135,20 +136,23 @@ class Cloudformation {
             throw new Error(`Tried to delete non-existing stack: ${this.stackName}`);
         }
 
-        const data = await this.cloudformation.deleteStack({
-            StackName: this.getFullStackName(),
-        }).promise();
-        if (data.ResponseMetadata.RequestId) {
-            console.log(data);
+        const input = await inquirer.prompt([
+            {
+                type: 'confirm',
+                name: 'confirm',
+                message: `Delete ${this.stackName}: `,
+            },
+        ]);
+        if (input.confirm) {
+            await cfn.delete({
+                name: this.getFullStackName(),
+                awsConfig: {
+                    region: this.region,
+                },
+            });
+        } else {
+            throw new Error('Operation aborted by user');
         }
-
-        // await cfn.delete({
-        //     name: this.getFullStackName(),
-        //     awsConfig: {
-        //         region: this.region,
-        //     },
-        // });
-        return true;
     }
 
     getFullStackName() {
