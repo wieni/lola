@@ -97,8 +97,12 @@ async function start(command) {
                     Logging.logError(`Deploy ${stackName}`, error.message);
                 }
                 break;
+            case 'delete':
+                try {
+                    await cloudformation.runDelete();
+                    Logging.logOk(`Delete ${stackName}`, 'Done');
                 } catch (error) {
-                    Helpers.logError(`Deploy ${stackName}`, error.message);
+                    Logging.logError(`Delete ${stackName}`, error.message);
                 }
                 break;
             }
@@ -137,6 +141,14 @@ program
     .description('Deploys a stack')
     .action(() => {
         start('deploy');
+    });
+
+program
+    .command('delete')
+    .alias('x')
+    .description('Deletes a stack')
+    .action(() => {
+        start('delete');
     });
 
 // Require a command.
