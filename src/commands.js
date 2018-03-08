@@ -42,15 +42,12 @@ class Commands {
     }
 
     async runExists() {
-        // Returns boolean if stack name 'foo-bar' exists
-        const exists = await cfn.stackExists({
-            name: this.getFullStackName(),
-            awsConfig: {
-                region: this.region,
-            },
-        });
-
-        return !!exists;
+        try {
+            await this.cloudformation.describeStack(this.getFullStackName());
+            return true;
+        } catch (err) {
+            return false;
+        }
     }
 
     async runDeploy() {
