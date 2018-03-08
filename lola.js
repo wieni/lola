@@ -109,6 +109,14 @@ async function start(command) {
                     Logging.logError(`Error running action on ${stackName}`, error.message);
                 }
                 break;
+            case 'protection':
+                try {
+                    const feedback = await cloudformation.runTerminationProtection();
+                    Logging.logOk(`Running protection on ${stackName}`, feedback);
+                } catch (error) {
+                    Logging.logError(`Error running protection on ${stackName}`, error.message);
+                }
+                break;
             }
         });
     });
@@ -161,6 +169,14 @@ program
     .description('Runs an action on a stack/env')
     .action(() => {
         start('action');
+    });
+
+program
+    .command('protection')
+    .alias('p')
+    .description('Toggles termination protection on a stack/env')
+    .action(() => {
+        start('protection');
     });
 
 // Require a command.

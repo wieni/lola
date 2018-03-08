@@ -190,6 +190,41 @@ class Cloudformation {
         }
     }
 
+    async runTerminationProtection() {
+        const exists = await this.runExists();
+        if (!exists) {
+            throw new Error(`Non-existing stack: ${this.stackName}`);
+        }
+
+        const stackData = await this.describeStack();
+        let status = String(stackData.EnableTerminationProtection);
+
+        const input = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'action',
+                message: `Termination protection status is currently ${status}. Change status to: `,
+                choices: ['true', 'false'],
+            },
+        ]);
+
+        if (status !== input.action) {
+            status = true;
+            if (input.action === 'false') {
+                status = false;
+            }
+
+            await this.cloudformation.updateTerminationProtection({
+                EnableTerminationProtection: status,
+                StackName: this.getFullStackName(),
+            }).promise();
+
+            return `Status changed to ${input.action}`;
+        }
+
+        return 'Status stays the same, no changes.';
+    }
+
     getFullStackName() {
         let result = `${this.config.project}-${this.stackName}-${this.env}`;
         result = result.toLowerCase();
