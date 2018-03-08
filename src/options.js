@@ -51,6 +51,8 @@ class Options {
         });
         if (deployOptions.environments) {
             // TODO Validate them.
+        } else if (allowedEnvs.length === 1) {
+            deployOptions.environments = allowedEnvs;
         } else {
             const input = await inquirer.prompt([
                 {
