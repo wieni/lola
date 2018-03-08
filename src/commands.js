@@ -1,9 +1,10 @@
 const cfn = require('cfn');
-const AWS = require('aws-sdk');
 const yaml = require('node-yaml');
 const inquirer = require('inquirer');
+const fs = require('fs');
 
 const Actions = require('./actions.js');
+const CloudFormation = require('./cloudformation.js');
 
 class Commands {
     constructor(config, stackName, env) {
@@ -16,27 +17,17 @@ class Commands {
         this.template = this.config.stacks[this.stackName].template;
         this.hooks = this.config.environments[this.env][this.stackName].hooks;
 
-        this.cloudformation = new AWS.CloudFormation({
-            region: this.region,
-        });
+        // To avoid confusion: this is our own class, not the aws-sdk one.
+        this.cloudformation = new CloudFormation(this.region);
     }
 
     async runValidate() {
         try {
-            await cfn.validate(
-                this.region,
-                this.template,
-            );
+            const file = await fs.readFileAsync(this.template, 'utf8');
+            await this.cloudformation.validateTemplate(file);
         } catch (error) {
             throw new Error(error);
         }
-    }
-
-    async describeStack() {
-        const data = await this.cloudformation.describeStacks({
-            StackName: this.getFullStackName(),
-        }).promise();
-        return data.Stacks[0];
     }
 
     async runStatus() {
@@ -46,7 +37,7 @@ class Commands {
         }
 
         // Get Stack Intel.
-        const stackData = await this.describeStack();
+        const stackData = await this.cloudformation.describeStack(this.getFullStackName());
         return yaml.dump(stackData);
     }
 
@@ -70,7 +61,7 @@ class Commands {
         if (!exists) {
             console.warn('Stack does not exist, creating');
         } else {
-            stackData = await this.describeStack();
+            stackData = await this.cloudformation.describeStack(this.getFullStackName());
         }
 
         // pre-deploy hook.
@@ -121,7 +112,7 @@ class Commands {
             throw new Error(`deploy: ${err}`);
         }
 
-        stackData = await this.describeStack();
+        stackData = await this.cloudformation.describeStack(this.getFullStackName());
 
         // post-deploy hook.
         if (this.hooks && this.hooks['post-deploy']) {
@@ -181,7 +172,7 @@ class Commands {
             },
         ]);
 
-        const stackData = await this.describeStack();
+        const stackData = await this.cloudformation.describeStack(this.getFullStackName());
 
         try {
             return await Actions.runAction({
@@ -202,7 +193,7 @@ class Commands {
             throw new Error(`Non-existing stack: ${this.stackName}`);
         }
 
-        const stackData = await this.describeStack();
+        const stackData = await this.cloudformation.describeStack(this.getFullStackName());
         let status = String(stackData.EnableTerminationProtection);
 
         const input = await inquirer.prompt([
@@ -220,10 +211,7 @@ class Commands {
                 status = false;
             }
 
-            await this.cloudformation.updateTerminationProtection({
-                EnableTerminationProtection: status,
-                StackName: this.getFullStackName(),
-            }).promise();
+            await this.cloudformation.updateTerminationProtection(this.getFullStackName(), status);
 
             return `Status changed to ${input.action}`;
         }
