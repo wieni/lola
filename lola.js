@@ -7,7 +7,7 @@ const Logging = require('./src/logging.js');
 const AwsCredentials = require('./src/awsCredentials.js');
 const Config = require('./src/config.js');
 const Options = require('./src/options.js');
-const Cloudformation = require('./src/cloudformation.js');
+const Commands = require('./src/commands.js');
 
 async function start(command) {
     Logging.logIfVerbose('Reading config file', program.verbose);
@@ -62,7 +62,7 @@ async function start(command) {
             AWS.config.credentials = await AwsCredentials.loadCredentials(config, stackName, env);
 
             // Run said action.
-            const cloudformation = new Cloudformation(config, stackName, env);
+            const commands = new Commands(config, stackName, env);
 
             switch (command) {
             default:
@@ -70,7 +70,7 @@ async function start(command) {
                 break;
             case 'validate':
                 try {
-                    await cloudformation.runValidate();
+                    await commands.runValidate();
                     Logging.logOk(`Template ${stackName}`, 'Template is valid');
                 } catch (error) {
                     Logging.logError(`Template ${stackName}`, error.message);
@@ -78,7 +78,7 @@ async function start(command) {
                 break;
             case 'status':
                 try {
-                    const output = await cloudformation.runStatus();
+                    const output = await commands.runStatus();
                     Logging.logOk(`Status ${stackName}`, 'Stack found');
                     Logging.logOk(`Status ${stackName}`, output, true);
                 } catch (error) {
@@ -87,7 +87,7 @@ async function start(command) {
                 break;
             case 'deploy':
                 try {
-                    await cloudformation.runDeploy();
+                    await commands.runDeploy();
                     Logging.logOk(`Deploy ${stackName}`, 'Done');
                 } catch (error) {
                     Logging.logError(`Deploy ${stackName}`, error.message);
@@ -95,7 +95,7 @@ async function start(command) {
                 break;
             case 'delete':
                 try {
-                    await cloudformation.runDelete();
+                    await commands.runDelete();
                     Logging.logOk(`Delete ${stackName}`, 'Done');
                 } catch (error) {
                     Logging.logError(`Delete ${stackName}`, error.message);
@@ -103,7 +103,7 @@ async function start(command) {
                 break;
             case 'action':
                 try {
-                    await cloudformation.runAction();
+                    await commands.runAction();
                     Logging.logOk(`Running action on ${stackName}`, 'Done');
                 } catch (error) {
                     Logging.logError(`Error running action on ${stackName}`, error.message);
@@ -111,10 +111,18 @@ async function start(command) {
                 break;
             case 'protection':
                 try {
-                    const feedback = await cloudformation.runTerminationProtection();
+                    const feedback = await commands.runTerminationProtection();
                     Logging.logOk(`Running protection on ${stackName}`, feedback);
                 } catch (error) {
                     Logging.logError(`Error running protection on ${stackName}`, error.message);
+                }
+                break;
+            case 'changeSet':
+                try {
+                    const output = await commands.runChangeSet();
+                    Logging.logOk(`ChangeSet ${stackName}`, output, true);
+                } catch (error) {
+                    Logging.logError(`ChangeSet ${stackName}`, error.message);
                 }
                 break;
             }
@@ -177,6 +185,14 @@ program
     .description('Toggles termination protection on a stack/env')
     .action(() => {
         start('protection');
+    });
+
+program
+    .command('changeSet')
+    .alias('c')
+    .description('Create and view changeset of a stack/env')
+    .action(() => {
+        start('changeSet');
     });
 
 // Require a command.

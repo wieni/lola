@@ -5,7 +5,7 @@ const inquirer = require('inquirer');
 
 const Actions = require('./actions.js');
 
-class Cloudformation {
+class Commands {
     constructor(config, stackName, env) {
         this.config = config;
         this.stackName = stackName;
@@ -231,6 +231,13 @@ class Cloudformation {
         return 'Status stays the same, no changes.';
     }
 
+    async runChangeSet() {
+        const exists = await this.runExists();
+        if (!exists) {
+            throw new Error(`Non-existing stack: ${this.stackName}`);
+        }
+    }
+
     getFullStackName() {
         let result = `${this.config.project}-${this.stackName}-${this.env}`;
         result = result.toLowerCase();
@@ -247,4 +254,4 @@ class Cloudformation {
     }
 }
 
-module.exports = Cloudformation;
+module.exports = Commands;
