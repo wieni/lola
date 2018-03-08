@@ -110,6 +110,12 @@ class Cloudformation {
                 awsConfig: {
                     region: this.region,
                 },
+                tags: {
+                    project: this.config.project.toLowerCase(),
+                    creator: this.config.creator.toLowerCase(),
+                    environment: this.env.toLowerCase(),
+                    region: this.region.toLowerCase(),
+                },
             });
         } catch (err) {
             throw new Error(`deploy: ${err}`);

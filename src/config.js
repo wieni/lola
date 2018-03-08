@@ -19,6 +19,11 @@ class Config {
             throw new Error('"project" not found in config file');
         }
 
+        // Projects have a creator.
+        if (!newConfig.creator) {
+            throw new Error('"creator" not found in config file');
+        }
+
         // Projects have stacks.
         if (!newConfig.stacks) {
             throw new Error('"stacks" not found in config file');
