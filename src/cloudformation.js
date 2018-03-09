@@ -44,6 +44,19 @@ class Cloudformation {
         }).promise();
         return data.Stacks[0];
     }
+
+    /**
+     * Deletes a stack.
+     *
+     * @param {string} stackName
+     */
+    async deleteStack(stackName) {
+        const params = {
+            StackName: stackName,
+        };
+        await this.cloudformation.deleteStack(params).promise();
+        await this.cloudformation.waitFor('stackDeleteComplete', params).promise();
+    }
 }
 
 module.exports = Cloudformation;
