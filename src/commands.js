@@ -12,10 +12,16 @@ class Commands {
         this.stackName = stackName;
         this.env = env;
 
+        // Make some stuff easier.
         this.profile = this.config.environments[this.env][this.stackName].profile;
         this.region = this.config.environments[this.env][this.stackName].region;
         this.template = this.config.stacks[this.stackName].template;
         this.hooks = this.config.environments[this.env][this.stackName].hooks;
+
+        this.params = {};
+        if (this.config.environments[this.env][this.stackName].params) {
+            this.params = this.config.environments[this.env][this.stackName].params;
+        }
 
         // To avoid confusion: this is our own class, not the aws-sdk one.
         this.cloudformation = new CloudFormation(this.region);
@@ -23,7 +29,7 @@ class Commands {
 
     async runValidate() {
         try {
-            const file = await fs.readFileAsync(this.template, 'utf8');
+            const file = await this.getTemplateBody();
             await this.cloudformation.validateTemplate(file);
         } catch (error) {
             throw new Error(error);
@@ -83,27 +89,16 @@ class Commands {
             }));
         }
 
-        // Get params.
-        let cfParams = {};
-        if (this.config.environments[this.env][this.stackName].params) {
-            cfParams = this.config.environments[this.env][this.stackName].params;
-        }
-
         // Do the actual deploy.
         try {
             await cfn({
                 name: this.getFullStackName(),
                 template: this.template,
-                cfParams,
+                cfParams: this.params,
                 awsConfig: {
                     region: this.region,
                 },
-                tags: {
-                    project: this.config.project.toLowerCase(),
-                    creator: this.config.creator.toLowerCase(),
-                    environment: this.env.toLowerCase(),
-                    region: this.region.toLowerCase(),
-                },
+                tags: this.getTags(),
             });
         } catch (err) {
             throw new Error(`deploy: ${err}`);
@@ -143,12 +138,7 @@ class Commands {
             },
         ]);
         if (input.confirm) {
-            await cfn.delete({
-                name: this.getFullStackName(),
-                awsConfig: {
-                    region: this.region,
-                },
-            });
+            await this.cloudformation.deleteStack(this.getFullStackName());
         } else {
             throw new Error('Operation aborted by user');
         }
@@ -217,10 +207,63 @@ class Commands {
     }
 
     async runChangeSet() {
+        // For now only on existing stacks.
         const exists = await this.runExists();
         if (!exists) {
             throw new Error(`Non-existing stack: ${this.stackName}`);
         }
+
+        // Check if we already HAVE one (which is a problem - delete that one).
+        try {
+            await this.cloudformation.describeChangeSet(
+                this.getFullStackName(),
+                CloudFormation.getHash(this.getFullStackName()),
+            );
+            await this.cloudformation.deleteChangeSet(this.getFullStackName(), CloudFormation.getHash(this.getFullStackName()));
+        } catch (error) {
+            if (error.code !== 'ChangeSetNotFound') {
+                throw new Error(error);
+            }
+        }
+
+        // Create one.
+        const body = await this.getTemplateBody();
+        const changeSetId = await this.cloudformation.createChangeSet(
+            this.getFullStackName(),
+            body,
+            this.params,
+            this.getTags(),
+            'UPDATE',
+        );
+
+        // Wait until it's there.
+        let changes = [];
+        /* eslint-disable no-await-in-loop */
+        do {
+            changes = await this.cloudformation.describeChangeSet(this.getFullStackName(), changeSetId);
+            await CloudFormation.timeout(1000);
+            if (changes.Status === 'FAILED') {
+                break;
+            }
+        } while (changes.Status !== 'CREATE_COMPLETE');
+        /* eslint-enable no-await-in-loop */
+
+        await this.cloudformation.deleteChangeSet(this.getFullStackName(), changeSetId);
+
+        if (changes.Changes.length === 0) {
+            return 'No changes';
+        }
+
+        return `\n${yaml.dump(changes.Changes)}`;
+    }
+
+    getTags() {
+        return {
+            project: this.config.project.toLowerCase(),
+            creator: this.config.creator.toLowerCase(),
+            environment: this.env.toLowerCase(),
+            region: this.region.toLowerCase(),
+        };
     }
 
     getFullStackName() {
@@ -236,6 +279,10 @@ class Commands {
         }
 
         return result;
+    }
+
+    getTemplateBody() {
+        return fs.readFileAsync(this.template, 'utf8');
     }
 }
 
