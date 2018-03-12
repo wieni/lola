@@ -38,9 +38,17 @@ async function start(command) {
         Logging.logIfVerbose('Reading options', program.verbose);
         options = await Options.readOptionsFile(program.optionsFile);
         if (program.optionsStack) {
+            if (Object.keys(config.stacks).indexOf(program.optionsStack) === -1) {
+                Logging.logError('Stack not found in config file', program.optionsStack);
+                process.exit(1);
+            }
             options.stacks = [program.optionsStack];
         }
         if (program.optionsEnvironment) {
+            if (Object.keys(config.environments).indexOf(program.optionsEnvironment) === -1) {
+                Logging.logError('Env not found in config file', program.optionsEnvironment);
+                process.exit(1);
+            }
             options.environments = [program.optionsEnvironment];
         }
 

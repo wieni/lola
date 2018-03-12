@@ -80,7 +80,6 @@ class Commands {
                     });
                     // TODO: SHould validate this!
                     if (newContext && newContext.config) {
-                        console.log(newContext);
                         this.config = newContext.config;
                     }
                 } catch (err) {
@@ -226,7 +225,7 @@ class Commands {
             }
         }
 
-        // Create one.
+        // Create new one.
         const body = await this.getTemplateBody();
         const changeSetId = await this.cloudformation.createChangeSet(
             this.getFullStackName(),
@@ -236,7 +235,7 @@ class Commands {
             'UPDATE',
         );
 
-        // Wait until it's there.
+        // Wait until it's created.
         let changes = [];
         /* eslint-disable no-await-in-loop */
         do {

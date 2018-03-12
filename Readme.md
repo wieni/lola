@@ -20,10 +20,11 @@ This is the main project file. Lola reads this file to get a grip on what you wa
 
 ```yml
 # The name of your project. This is required and will be used in
-# stack names etc.
+# stack names, tags, etc.
 project: <project-name>
 
-# Region and profile are not required but will be asked if not present.
+# Email adress of the creator. Will be used as tag in each stack.
+creator: <e-mail address>
 
 
 # Stacks is a description of the different cloudformation stacks you'll want to
