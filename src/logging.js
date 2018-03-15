@@ -14,6 +14,12 @@ class Logging {
         this.log(`${chalk.red(subject)}: ${message}`);
     }
 
+    static async logEvent(stackName, action, event) {
+        /* eslint-disable max-len */
+        console.log(`[${chalk.gray(moment(event.Timestamp).format('HH:mm:ss'))}] ${action} ${chalk.cyan(stackName)}: ${event.ResourceType} - ${chalk.yellow(event.LogicalResourceId)} ${chalk.green(event.ResourceStatus)} ${event.ResourceStatusReason || ''}`);
+        /* eslint-enable max-len */
+    }
+
     static async logOk(subject, message, indent = false) {
         if (indent) {
             const result = `${chalk.green(subject)}: ${message}`;

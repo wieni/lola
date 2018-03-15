@@ -40,6 +40,48 @@ class Cloudformation {
         }).promise();
     }
 
+    async describeStackEvents(StackName, ClientRequestToken) {
+        const events = await this.cloudformation.describeStackEvents({
+            StackName,
+            // NextToken: 'STRING_VALUE',
+
+        }).promise();
+
+        // Filter out only the good events.
+        let result;
+        if (events.StackEvents) {
+            result = await events.StackEvents.filter(event => !ClientRequestToken || event.ClientRequestToken === ClientRequestToken);
+        }
+
+        return result;
+    }
+
+    /**
+     * Creates a new stack.
+     *
+     * @param {sting} StackName
+     * @param {string} ClientRequestToken
+     * @param {array} parameters
+     * @param {string} TemplateBody
+     * @param {array} tags
+     */
+    async createStack(StackName, ClientRequestToken, parameters, TemplateBody, tags) {
+        const transposedParams = await Cloudformation.transposeParams(parameters);
+        const transposedTags = await Cloudformation.transposeTags(tags);
+
+        return this.cloudformation.createStack({
+            StackName,
+            Capabilities: this.capabilities,
+            // EnableTerminationProtection: true,
+            ClientRequestToken,
+            OnFailure: 'DELETE',
+            Parameters: transposedParams,
+            Tags: transposedTags,
+            TemplateBody,
+            // TimeoutInMinutes: 0
+        }).promise();
+    }
+
     /**
      * Get intel about ONE stack.
      *
@@ -57,12 +99,11 @@ class Cloudformation {
      *
      * @param {string} stackName
      */
-    async deleteStack(stackName) {
-        const params = {
-            StackName: stackName,
-        };
-        await this.cloudformation.deleteStack(params).promise();
-        await this.cloudformation.waitFor('stackDeleteComplete', params).promise();
+    async deleteStack(StackName, ClientRequestToken) {
+        return this.cloudformation.deleteStack({
+            StackName,
+            ClientRequestToken,
+        }).promise();
     }
 
     /**
@@ -78,7 +119,7 @@ class Cloudformation {
      */
     async createChangeSet(stackName, body, params, tags, changeSetType = 'UPDATE') {
         const transposedParams = await Cloudformation.transposeParams(params);
-        const transposedTags = await Cloudformation.TransposeTags(tags);
+        const transposedTags = await Cloudformation.transposeTags(tags);
         const hash = await Cloudformation.getHash(stackName);
 
         // Create the change set.
@@ -128,7 +169,7 @@ class Cloudformation {
      *
      * @param {Object} tags
      */
-    static TransposeTags(tags) {
+    static transposeTags(tags) {
         const result = [];
         Object.keys(tags).forEach((key) => {
             result.push({

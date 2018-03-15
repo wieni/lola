@@ -1,8 +1,9 @@
-const cfn = require('cfn');
+// const cfn = require('cfn');
 const yaml = require('node-yaml');
 const inquirer = require('inquirer');
 const fs = require('fs');
 
+const Logging = require('./logging.js');
 const Actions = require('./actions.js');
 const CloudFormation = require('./cloudformation.js');
 
@@ -61,9 +62,7 @@ class Commands {
         const exists = await this.runExists();
 
         let stackData = {};
-        if (!exists) {
-            console.warn('Stack does not exist, creating');
-        } else {
+        if (exists) {
             stackData = await this.cloudformation.describeStack(this.getFullStackName());
         }
 
@@ -89,21 +88,34 @@ class Commands {
         }
 
         // Do the actual deploy.
-        try {
-            await cfn({
-                name: this.getFullStackName(),
-                template: this.template,
-                cfParams: this.params,
-                awsConfig: {
-                    region: this.region,
-                },
-                tags: this.getTags(),
-            });
-        } catch (err) {
-            throw new Error(`deploy: ${err}`);
-        }
+        if (exists) {
+            stackData = await this.cloudformation.describeStack(this.getFullStackName());
+            const token = await this.generateToken('update');
+            const file = await this.getTemplateBody();
 
-        stackData = await this.cloudformation.describeStack(this.getFullStackName());
+            await this.cloudformation.updateStack(
+                this.getFullStackName(),
+                token,
+                this.params,
+                file,
+                this.getTags(),
+            );
+
+            await this.loopEvents('UPDATE_IN_PROGRESS', token);
+        } else {
+            const token = await this.generateToken('create');
+            const file = await this.getTemplateBody();
+
+            await this.cloudformation.createStack(
+                this.getFullStackName(),
+                token,
+                this.params,
+                file,
+                this.getTags(),
+            );
+
+            await this.loopEvents('CREATE_IN_PROGRESS', token);
+        }
 
         // post-deploy hook.
         if (this.hooks && this.hooks['post-deploy']) {
@@ -136,10 +148,20 @@ class Commands {
                 message: `Delete ${this.stackName}: `,
             },
         ]);
-        if (input.confirm) {
-            await this.cloudformation.deleteStack(this.getFullStackName());
-        } else {
+
+        if (!input.confirm) {
             throw new Error('Operation aborted by user');
+        }
+
+        const token = this.generateToken('delete');
+        await this.cloudformation.deleteStack(this.getFullStackName(), token);
+
+        try {
+            await this.loopEvents('DELETE_IN_PROGRESS', token);
+        } catch (error) {
+            if (error.code !== 'ValidationError') {
+                throw new Error(error);
+            }
         }
     }
 
@@ -256,6 +278,35 @@ class Commands {
         return `\n${yaml.dump(changes.Changes)}`;
     }
 
+    async loopEvents(successAction, token) {
+        let stackData;
+        let eventData;
+
+        let noun = 'Create';
+        if (successAction === 'DELETE_IN_PROGRESS') {
+            noun = 'Delete';
+        }
+        if (successAction === 'UPDATE_IN_PROGRESS') {
+            noun = 'Update';
+        }
+
+        /* eslint-disable no-await-in-loop,no-loop-func */
+        const eventIds = [];
+        do {
+            stackData = await this.cloudformation.describeStack(this.getFullStackName());
+            eventData = await this.cloudformation.describeStackEvents(this.getFullStackName(), token);
+
+            eventData.forEach(async (event) => {
+                if (eventIds.indexOf(event.EventId) === -1) {
+                    await Logging.logEvent(this.stackName, noun, event);
+                    await eventIds.push(event.EventId);
+                }
+            });
+            await CloudFormation.timeout(100);
+        } while (stackData.StackStatus === successAction);
+        /* eslint-enable no-await-in-loop,no-loop-func */
+    }
+
     getTags() {
         return {
             project: this.config.project.toLowerCase(),
@@ -281,7 +332,11 @@ class Commands {
     }
 
     getTemplateBody() {
-        return fs.readFileAsync(this.template, 'utf8');
+        return fs.readFileSync(this.template, 'utf8');
+    }
+
+    generateToken(action) {
+        return `lola-${action}-${CloudFormation.getHash(this.stackName)}`;
     }
 }
 
