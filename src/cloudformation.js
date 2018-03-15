@@ -161,7 +161,7 @@ class Cloudformation {
      * @param {string} stackName
      */
     static getHash(stackName) {
-        return crypto.createHash('md5').update(stackName).digest('hex');
+        return `lola-${crypto.createHash('md5').update(stackName).digest('hex')}`;
     }
 
     /**
