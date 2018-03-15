@@ -336,7 +336,7 @@ class Commands {
     }
 
     generateToken(action) {
-        return `lola-${action}-${CloudFormation.getHash(this.stackName)}`;
+        return `lola-${action}-${this.stackName}-${Date.now()}`;
     }
 }
 
