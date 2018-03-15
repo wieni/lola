@@ -72,7 +72,7 @@ class Cloudformation {
         return this.cloudformation.createStack({
             StackName,
             Capabilities: this.capabilities,
-            // EnableTerminationProtection: true,
+            EnableTerminationProtection: true,
             ClientRequestToken,
             OnFailure: 'DELETE',
             Parameters: transposedParams,
