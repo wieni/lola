@@ -30,6 +30,7 @@ class Cloudformation {
 
     /**
      * Updates termination protection on a stack.
+     *
      * @param {string} stackName
      * @param {string} status
      */
@@ -40,6 +41,12 @@ class Cloudformation {
         }).promise();
     }
 
+    /**
+     * Get the stack events with a certain optional token
+     *
+     * @param {string} StackName
+     * @param {string} ClientRequestToken
+     */
     async describeStackEvents(StackName, ClientRequestToken) {
         const events = await this.cloudformation.describeStackEvents({
             StackName,
@@ -54,6 +61,21 @@ class Cloudformation {
         }
 
         return result;
+    }
+
+    async updateStack(StackName, ClientRequestToken, parameters, TemplateBody, tags) {
+        const transposedParams = await Cloudformation.transposeParams(parameters);
+        const transposedTags = await Cloudformation.transposeTags(tags);
+
+        const params = {
+            StackName,
+            Capabilities: this.capabilities,
+            ClientRequestToken,
+            Parameters: transposedParams,
+            Tags: transposedTags,
+            TemplateBody,
+        };
+        return this.cloudformation.updateStack(params).promise();
     }
 
     /**
@@ -137,6 +159,12 @@ class Cloudformation {
         return result.Id;
     }
 
+    /**
+     * Get the contents of a change set.
+     *
+     * @param {string} stackName
+     * @param {string} changeSetName
+     */
     async describeChangeSet(stackName, changeSetName) {
         const result = await this.cloudformation.describeChangeSet({
             ChangeSetName: changeSetName,
@@ -146,6 +174,12 @@ class Cloudformation {
         return result;
     }
 
+    /**
+     * Deletes a change set.
+     *
+     * @param {string} stackName
+     * @param {string} changeSetName
+     */
     async deleteChangeSet(stackName, changeSetName) {
         const result = await this.cloudformation.deleteChangeSet({
             ChangeSetName: changeSetName,
@@ -198,6 +232,9 @@ class Cloudformation {
         return result;
     }
 
+    /**
+     * @param {int} ms
+     */
     static timeout(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
