@@ -16,10 +16,6 @@ async function zipDir(dir) {
     });
 }
 
-const config = {
-    BucketParamName: 'THE NAME OF THE PARAM WHERE YOUR BUCKET IS HERE',
-};
-
 /**
  * @param Object context
  */
@@ -62,7 +58,7 @@ async function runAction(context) {
     }
     const s3 = new AWS.S3();
     const lambdaService = new AWS.Lambda({ region });
-    const bucketName = params[config.BucketParamName];
+    const bucketName = params.LambdaBucket;
 
     for (const lambda of chosenLambdas) {
         // Get function name.
@@ -99,7 +95,7 @@ async function runAction(context) {
         await lambdaService.updateFunctionCode({
             FunctionName: functionName,
             Publish: true,
-            S3Bucket: bucketName,
+            S3Bucket: params.LambdaBucket,
             S3Key: s3key,
             S3ObjectVersion: uploadData.VersionId,
         }).promise();
