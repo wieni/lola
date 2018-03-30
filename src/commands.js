@@ -336,7 +336,8 @@ class Commands {
     }
 
     generateToken(action) {
-        return `lola-${action}-${this.stackName}-${Date.now()}`;
+        const cleanStackName = this.stackName.replace('_', '-');
+        return `lola-${action}-${cleanStackName}-${Date.now()}`;
     }
 }
 
