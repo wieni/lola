@@ -304,7 +304,7 @@ class Commands {
                     await eventIds.push(event.EventId);
                 }
             });
-            await CloudFormation.timeout(100);
+            await CloudFormation.timeout(250);
         } while (stackData.StackStatus === successAction);
         /* eslint-enable no-await-in-loop,no-loop-func */
     }
