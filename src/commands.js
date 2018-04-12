@@ -228,6 +228,8 @@ class Commands {
     }
 
     async runChangeSet() {
+        await this.runValidate();
+
         // For now only on existing stacks.
         const exists = await this.runExists();
         if (!exists) {
