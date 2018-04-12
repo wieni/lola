@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const util = require('util');
+const AWS = require('aws-sdk');
 
 const access = util.promisify(fs.access);
 
@@ -49,7 +50,13 @@ class Actions {
             context.action,
         );
         const actionFile = require(`${process.cwd()}/${actionPath}`);
-        return actionFile.runAction(context);
+
+        // Add in the loaded credentials too.
+        const contextWithAws = context;
+        contextWithAws.AWS = {};
+        contextWithAws.AWS.config = AWS.config;
+
+        return actionFile.runAction(contextWithAws);
     }
 }
 
