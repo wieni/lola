@@ -61,11 +61,11 @@ async function start(command) {
         Logging.logError('Options', err);
     }
 
-    // Banner.
-    Logging.log(chalk.yellow.bold(`Starting: ${config.project}`));
-
     options.stacks.forEach(async (stackName) => {
         options.environments.forEach(async (env) => {
+            // Banner.
+            Logging.log(chalk.yellow.bold(`Starting: ${config.project} - ${stackName} - ${env}`));
+
             // Set credentials. Do it each time again since this can switch per stack/env.
             AWS.config.credentials = await AwsCredentials.loadCredentials(config, stackName, env);
 
