@@ -22,14 +22,10 @@ class Options {
                     type: 'list',
                     name: 'stack',
                     message: 'Stack: ',
-                    choices: Object.keys(config.stacks).concat([all]),
+                    choices: Object.keys(config.stacks),
                 },
             ]);
-            if (input === all) {
-                deployOptions.stacks = Object.keys(config.stacks);
-            } else {
-                deployOptions.stacks = [input.stack];
-            }
+            deployOptions.stacks = [input.stack];
         }
         deployOptions.stacks.forEach((name) => {
             if (Object.keys(config.stacks).indexOf(name) === -1) {
