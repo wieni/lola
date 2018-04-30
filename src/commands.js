@@ -315,7 +315,6 @@ class Commands {
             creator: this.config.creator.toLowerCase(),
             environment: this.env.toLowerCase(),
             region: this.region.toLowerCase(),
-            Name: this.getFullStackName(),
         };
     }
 
