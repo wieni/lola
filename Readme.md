@@ -33,6 +33,7 @@ stacks:
     # Give that stack a name.
     <stack1>:
         template: <location of the template.yml file for this stack>
+        description: <optionally describe this stack>
         actions:
             preDeploy: preDeployScript.js
 

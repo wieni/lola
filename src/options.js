@@ -15,6 +15,14 @@ class Options {
     static async validateOptions(options, config) {
         const deployOptions = options;
 
+        const stackChoices = [];
+        Object.keys(config.stacks).forEach((stack) => {
+            stackChoices.push({
+                name: config.stacks[stack].description ? `${stack.padEnd(45)}${config.stacks[stack].description}` : stack,
+                value: stack,
+            });
+        });
+
         // Stack.
         if (!deployOptions.stacks) {
             const input = await inquirer.prompt([
@@ -22,7 +30,7 @@ class Options {
                     type: 'list',
                     name: 'stack',
                     message: 'Stack: ',
-                    choices: Object.keys(config.stacks),
+                    choices: stackChoices,
                 },
             ]);
             deployOptions.stacks = [input.stack];
