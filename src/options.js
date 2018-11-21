@@ -1,8 +1,6 @@
 const yaml = require('node-yaml');
 const inquirer = require('inquirer');
 
-const all = '*all*';
-
 class Options {
     /**
      * Read config from file,
@@ -63,14 +61,11 @@ class Options {
                     type: 'list',
                     name: 'environment',
                     message: 'Environment: ',
-                    choices: allowedEnvs.concat([all]),
+                    choices: allowedEnvs,
                 },
             ]);
-            if (input === all) {
-                deployOptions.environments = allowedEnvs;
-            } else {
-                deployOptions.environments = [input.environment];
-            }
+
+            deployOptions.environments = [input.environment];
         }
         deployOptions.environments.forEach((name) => {
             if (Object.keys(config.environments).indexOf(name) === -1) {
