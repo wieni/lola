@@ -1,6 +1,7 @@
 // const cfn = require('cfn');
 const yaml = require('node-yaml');
 const inquirer = require('inquirer');
+const chalk = require('chalk');
 const fs = require('fs');
 
 const Logging = require('./logging.js');
@@ -45,7 +46,8 @@ class Commands {
 
         // Get Stack Intel.
         const stackData = await this.cloudformation.describeStack(this.getFullStackName());
-        return yaml.dump(stackData);
+        const dump = yaml.dump(stackData);
+        return yaml.dump(this.constructor.colorStackOutput(dump));
     }
 
     async runExists() {
@@ -277,7 +279,8 @@ class Commands {
             return 'No changes';
         }
 
-        return `\n${yaml.dump(changes.Changes)}`;
+        const dump = yaml.dump(changes.Changes);
+        return `\n${this.constructor.colorStackOutput(dump)}`;
     }
 
     async loopEvents(successAction, token) {
@@ -340,6 +343,16 @@ class Commands {
     generateToken(action) {
         const cleanStackName = this.stackName.replace('_', '-');
         return `lola-${action}-${cleanStackName}-${Date.now()}`;
+    }
+
+    static colorStackOutput(input) {
+        let output = input;
+        output = output.replace(/Action: Modify/g, chalk.black.bgYellow('Action: Modify'));
+        output = output.replace(/Replacement: Conditional/g, chalk.black.bgYellow('Replacement: Conditional'));
+        output = output.replace(/Action: Remove/g, chalk.black.bgRed('Action: Remove'));
+        output = output.replace(/LogicalResourceId/g, chalk.underline('LogicalResourceId'));
+        output = output.replace(/RequiresRecreation/g, chalk.underline('RequiresRecreation'));
+        return output;
     }
 }
 
