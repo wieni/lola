@@ -349,6 +349,8 @@ class Commands {
         let output = input;
         output = output.replace(/Action: Modify/g, chalk.black.bgYellow('Action: Modify'));
         output = output.replace(/Replacement: Conditional/g, chalk.black.bgYellow('Replacement: Conditional'));
+        output = output.replace(/Replacement: False/g, chalk.black.bgYellow('Replacement: False'));
+        output = output.replace(/Replacement: 'False'/g, chalk.black.bgYellow('Replacement: \'False\''));
         output = output.replace(/Action: Remove/g, chalk.black.bgRed('Action: Remove'));
         output = output.replace(/LogicalResourceId/g, chalk.underline('LogicalResourceId'));
         output = output.replace(/RequiresRecreation/g, chalk.underline('RequiresRecreation'));
