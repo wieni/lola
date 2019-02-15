@@ -354,8 +354,8 @@ class Commands {
         output = output.replace(/Replacement: Conditional/g, chalk.black.bgYellow('Replacement: Conditional'));
         output = output.replace(/Replacement: False/g, chalk.black.bgYellow('Replacement: False'));
         output = output.replace(/Replacement: 'False'/g, chalk.black.bgYellow('Replacement: \'False\''));
-        output = output.replace(/Replacement: True/g, chalk.black.bgYellow('Replacement: True'));
-        output = output.replace(/Replacement: 'True'/g, chalk.black.bgYellow('Replacement: \'True\''));
+        output = output.replace(/Replacement: True/g, chalk.black.bgRed('Replacement: True'));
+        output = output.replace(/Replacement: 'True'/g, chalk.black.bgRed('Replacement: \'True\''));
 
         output = output.replace(/LogicalResourceId/g, chalk.underline('LogicalResourceId'));
         output = output.replace(/RequiresRecreation/g, chalk.underline('RequiresRecreation'));
