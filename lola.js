@@ -9,7 +9,7 @@ const Config = require('./src/config.js');
 const Options = require('./src/options.js');
 const Commands = require('./src/commands.js');
 
-async function start(command) {
+exports.start = async (command) => {
     Logging.logIfVerbose('Reading config file', program.verbose);
 
     let config = {};
@@ -136,7 +136,7 @@ async function start(command) {
             }
         });
     });
-}
+};
 
 program
     .version('0.0.1')
@@ -152,7 +152,7 @@ program
     .alias('v')
     .description('Validates a stack')
     .action(() => {
-        start('validate');
+        exports.start('validate');
     });
 
 program
@@ -160,7 +160,7 @@ program
     .alias('s')
     .description('Get the status of a stack')
     .action(() => {
-        start('status');
+        exports.start('status');
     });
 
 program
@@ -168,7 +168,7 @@ program
     .alias('d')
     .description('Deploys a stack')
     .action(() => {
-        start('deploy');
+        exports.start('deploy');
     });
 
 program
@@ -176,7 +176,7 @@ program
     .alias('x')
     .description('Deletes a stack')
     .action(() => {
-        start('delete');
+        exports.start('delete');
     });
 
 program
@@ -184,7 +184,7 @@ program
     .alias('a')
     .description('Runs an action on a stack/env')
     .action(() => {
-        start('action');
+        exports.start('action');
     });
 
 program
@@ -192,7 +192,7 @@ program
     .alias('p')
     .description('Toggles termination protection on a stack/env')
     .action(() => {
-        start('protection');
+        exports.start('protection');
     });
 
 program
@@ -200,14 +200,15 @@ program
     .alias('c')
     .description('Create and view changeset of a stack/env')
     .action(() => {
-        start('changeSet');
+        exports.start('changeSet');
     });
 
-// Require a command.
-if (process.argv[2] === undefined) {
-    program.outputHelp();
-    process.exit(1);
-}
+exports.lola = async () => {
+    // Require a command.
+    if (process.argv[2] === undefined) {
+        program.outputHelp();
+        process.exit(1);
+    }
 
-program.parse(process.argv);
-
+    program.parse(process.argv);
+};

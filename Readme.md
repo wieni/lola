@@ -9,8 +9,12 @@ Lola is an opiniated tool to do stuff within the AWS Cloud. The main focus is on
 ## Installation
 
 1. Clone the repo
-2. ```yarn install```
-3. npm link
+2. ```npm install```
+3. ```(sudo) npm install -g ./```
+
+## Installation when running yarn in docker
+
+1. TODO
 
 ## Usage
 
