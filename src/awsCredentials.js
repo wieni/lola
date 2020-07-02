@@ -10,7 +10,7 @@ class AwsCredentials {
         const { region } = config.environments[env][stackName];
 
         return this.assumeRole(profile, region)
-            .then(credentials => credentials)
+            .then((credentials) => credentials)
             .catch(() => new AWS.SharedIniFileCredentials({ profile, region }));
     }
 

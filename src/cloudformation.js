@@ -57,7 +57,7 @@ class Cloudformation {
         // Filter out only the good events.
         let result;
         if (events.StackEvents) {
-            result = await events.StackEvents.filter(event => !ClientRequestToken || event.ClientRequestToken === ClientRequestToken);
+            result = await events.StackEvents.filter((event) => !ClientRequestToken || event.ClientRequestToken === ClientRequestToken);
         }
 
         return result;
@@ -236,7 +236,7 @@ class Cloudformation {
      * @param {int} ms
      */
     static timeout(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
 }
 

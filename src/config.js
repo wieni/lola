@@ -59,20 +59,20 @@ class Config {
             await Promise.all(Object.keys(newConfig.environments[environmentName]).map(async (stackName) => {
                 if (defaultOptions[stackName]) {
                     // Fill in region.
-                    if (!newConfig.environments[environmentName][stackName].region &&
-                        defaultOptions[stackName].region
+                    if (!newConfig.environments[environmentName][stackName].region
+                        && defaultOptions[stackName].region
                     ) {
                         newConfig.environments[environmentName][stackName].region = defaultOptions[stackName].region;
                     }
                     // Fill in profile.
-                    if (!newConfig.environments[environmentName][stackName].profile &&
-                        defaultOptions[stackName].profile
+                    if (!newConfig.environments[environmentName][stackName].profile
+                        && defaultOptions[stackName].profile
                     ) {
                         newConfig.environments[environmentName][stackName].profile = defaultOptions[stackName].profile;
                     }
                     // Fill in actions.
-                    if (!newConfig.environments[environmentName][stackName].hooks &&
-                        defaultOptions[stackName].hooks
+                    if (!newConfig.environments[environmentName][stackName].hooks
+                        && defaultOptions[stackName].hooks
                     ) {
                         newConfig.environments[environmentName][stackName].hooks = defaultOptions[stackName].hooks;
                     }
