@@ -1,12 +1,11 @@
 {
-  "name": "lola",
+  "name": "@wieni/lola",
   "version": "0.0.2",
   "description": "AWS related deployment helper. . ",
   "main": "lola.js",
-  "repository": "git@git.wieni.be:wieni/lola.git",
+  "repository": "git@github.com:wieni/lola.git",
   "author": "Bart Van Thillo <bart@wieni.be>",
   "license": "MIT",
-  "private": true,
   "preferGlobal": true,
   "dependencies": {
     "aws-sdk": "^2.709.0",
@@ -26,6 +25,9 @@
   },
   "scripts": {
     "lint": "eslint ."
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
   },
   "devDependencies": {
     "eslint": "^7.3.1",

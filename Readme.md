@@ -1,24 +1,18 @@
 # Lola
 
-Lola is an opiniated tool to do stuff within the AWS Cloud. The main focus is on creating/updating cloudformation templates but some peripheral activity should be possible as well.
+![image](https://david-dm.org/wieni/lola.svg)
 
-## Requirements
-
-- High enough node version. (8)
+Lola is an opiniated cli tool to organise and deploy AWS Cloudformation templates.
 
 ## Installation
 
-1. Clone the repo
-2. ```npm install```
-3. ```(sudo) npm install -g ./```
-
-## Installation when running yarn in docker
-
-1. TODO
+``` bash
+  $ [sudo] npm install lola -g
+```
 
 ## Usage
 
-### config.yml
+### lola.yml
 
 This is the main project file. Lola reads this file to get a grip on what you want to get done.
 
