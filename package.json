@@ -9,24 +9,24 @@
   "private": true,
   "preferGlobal": true,
   "dependencies": {
-    "aws-sdk": "^2.324.0",
-    "chalk": "^2.4.1",
-    "commander": "^2.18.0",
+    "aws-sdk": "^2.709.0",
+    "chalk": "^4.1.0",
+    "commander": "^5.1.0",
     "ini": "^1.3.5",
-    "inquirer": "^6.2.0",
-    "moment": "^2.20.1",
-    "node-yaml": "^3.1.1",
+    "inquirer": "^7.3.0",
+    "js-yaml": "^3.14.0",
+    "moment": "^2.27.0",
     "path": "^0.12.7"
   },
   "bin": {
     "lola": "./bin/index.js"
   },
   "engines": {
-    "node": ">=8"
+    "node": ">=12"
   },
   "devDependencies": {
-    "eslint": "^4.19.1",
-    "eslint-config-airbnb-base": "^12.1.0",
-    "eslint-plugin-import": "^2.8.0"
+    "eslint": "^7.3.1",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.0"
   }
 }

@@ -1,4 +1,5 @@
-const yaml = require('node-yaml');
+const yaml = require('js-yaml');
+const fs = require('fs');
 
 const Actions = require('./actions.js');
 
@@ -8,7 +9,7 @@ class Config {
      * @param {string} fileName
      */
     static readConfigFile(fileName = 'lola.yml') {
-        return yaml.read(`${process.cwd()}/${fileName}`);
+        return yaml.safeLoad(fs.readFileSync(`${process.cwd()}/${fileName}`, 'utf8'));
     }
 
     static async validateConfig(config) {

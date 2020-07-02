@@ -1,4 +1,4 @@
-const yaml = require('node-yaml');
+const yaml = require('js-yaml');
 const inquirer = require('inquirer');
 
 class Options {
@@ -7,7 +7,7 @@ class Options {
      * @param {string} fileName
      */
     static readOptionsFile(fileName = '') {
-        return fileName ? yaml.read(`${process.cwd()}/${fileName}`) : {};
+        return fileName ? yaml.safeLoad(fs.readFileSync(`${process.cwd()}/${fileName}`, 'utf8')) : {};
     }
 
     static async validateOptions(options, config) {

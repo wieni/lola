@@ -1,5 +1,5 @@
 // const cfn = require('cfn');
-const yaml = require('node-yaml');
+const yaml = require('js-yaml');
 const inquirer = require('inquirer');
 const chalk = require('chalk');
 const fs = require('fs');
@@ -46,8 +46,8 @@ class Commands {
 
         // Get Stack Intel.
         const stackData = await this.cloudformation.describeStack(this.getFullStackName());
-        const dump = yaml.dump(stackData);
-        return yaml.dump(this.constructor.colorStackOutput(dump));
+        const dump = yaml.safeDump(stackData);
+        return yaml.safeDump(this.constructor.colorStackOutput(dump));
     }
 
     async runExists() {
@@ -279,7 +279,7 @@ class Commands {
             return 'No changes';
         }
 
-        const dump = yaml.dump(changes.Changes);
+        const dump = yaml.safeDump(changes.Changes);
         return `\n${this.constructor.colorStackOutput(dump)}`;
     }
 
