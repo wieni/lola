@@ -1,6 +1,6 @@
 {
-  "name": "@wieni/lola",
-  "version": "0.0.2",
+  "name": "lola",
+  "version": "1.0.0",
   "description": "AWS related deployment helper. . ",
   "main": "lola.js",
   "repository": "git@github.com:wieni/lola.git",
@@ -27,7 +27,7 @@
     "lint": "eslint ."
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
+    "access": "public"
   },
   "devDependencies": {
     "eslint": "^7.3.1",

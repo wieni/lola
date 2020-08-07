@@ -140,7 +140,7 @@ exports.start = async (command) => {
 
 program
     .version('0.0.1')
-    .description('Do AWS Stuff')
+    .description('Reads a config file (lola.yml) and acts on the AWS Cloudformation stacks defined in that file')
     .option('-c, --config-file <configFile>', 'Optional config file')
     .option('-o, --options-file <optionsFile>', 'Optional deploy options file')
     .option('-v, --verbose', 'Verbose output')

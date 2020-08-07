@@ -2,7 +2,7 @@
 
 ![image](https://david-dm.org/wieni/lola.svg)
 
-Lola is an opiniated cli tool to organise and deploy AWS Cloudformation templates.
+Lola is an opiniated cli tool to orchestrate AWS Cloudformation templates.
 
 ## Installation
 
@@ -14,14 +14,14 @@ Lola is an opiniated cli tool to organise and deploy AWS Cloudformation template
 
 ### lola.yml
 
-This is the main project file. Lola reads this file to get a grip on what you want to get done.
+Lola expects a config file (lola.yml) which holds information about the AWS Cloudformation stacks you wish to control.
 
 ```yml
 # The name of your project. This is required and will be used in
 # stack names, tags, etc.
 project: <project-name>
 
-# Email adress of the creator. Will be used as tag in each stack.
+# Email adress of the creator. Optional; Will be used as tag in each stack.
 creator: <e-mail address>
 
 
@@ -36,7 +36,7 @@ stacks:
             preDeploy: preDeployScript.js
 
 environments:
-    # This is reserved, you can set global stuff for each stack in each env
+    # This is reserved, you can set global stuff for each stack in each env. Optional.
     default:
         <stack1>:
             # This will override ANY region/profile for stack1 in ANY env below
@@ -56,14 +56,38 @@ environments:
                     - preDeploy
 ```
 
-### options
+### cli
 
-There are some choices to be made when running lola:
+```
+$ lola --help
+Usage: lola [options] [command]
 
-* Which stacks you want to apply your action on
-* Which env (if any) you want to apply your action on
+Do AWS Stuff
 
-These will be asked when running lola but can also be provided through an input file (-o flag) or other input flags.
+Options:
+  -V, --version                                   output the version number
+  -c, --config-file <configFile>                  Optional config file
+  -o, --options-file <optionsFile>                Optional deploy options file
+  -v, --verbose                                   Verbose output
+  -s, --options-stack <optionsStack>              Stack
+  -e, --options-environment <optionsEnvironment>  Environment
+  -h, --help                                      display help for command
+
+Commands:
+  validate|v                                      Validates a stack
+  status|s                                        Get the status of a stack
+  deploy|d                                        Deploys a stack
+  delete|x                                        Deletes a stack
+  action|a                                        Runs an action on a stack/env
+  protection|p                                    Toggles termination protection on a stack/env
+  changeSet|c                                     Create and view changeset of a stack/env
+  help [command]                                  display help for command
+  ```
+
+### Running lola
+
+When running a lola command (validate, status, ..) without arguments, lola will ask about two things: **the stack** and the **environment**. These can also be provided through an input file (-o flag) or other input flags.
+
 
 ### deploy hooks
 
