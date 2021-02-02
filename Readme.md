@@ -21,9 +21,11 @@ Lola expects a config file (lola.yml) which holds information about the AWS Clou
 # stack names, tags, etc.
 project: <project-name>
 
-# Email adress of the creator. Optional; Will be used as tag in each stack.
-creator: <e-mail address>
-
+# List of key-value tags that should be added to each stack. When set on this or a lower level,
+# it wil override the default tags of project, environment and region.
+tags:
+    - <name-of-tag>: <value-of-tag>
+    - <name-of-another-tag>: <value-of-another-tag>
 
 # Stacks is a description of the different cloudformation stacks you'll want to
 # manage and the specific order in which they'll need to be managed.
@@ -42,12 +44,20 @@ environments:
             # This will override ANY region/profile for stack1 in ANY env below
             region: <aws region>
             profile: <~/.aws/credentails profile name>
+            tags:
+              - <name-of-tag>: <value-of-tag>
+              - <name-of-another-tag>: <value-of-another-tag>
     # Give that environment a name.
     <dev>:
         # Environment params for <stack1>
         <stack1>:
             # Override the stackname for this env. Optional, if not present lola generates one.
             name: <my-stack-dev>
+            region: <aws region>
+            profile: <~/.aws/credentails profile name>
+            tags:
+              - <name-of-tag>: <value-of-tag>
+              - <name-of-another-tag>: <value-of-another-tag>
             terminationProtection: <true|false>
             params:
                 <Param1>: <Value1>

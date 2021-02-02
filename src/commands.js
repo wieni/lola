@@ -313,12 +313,32 @@ class Commands {
     }
 
     getTags() {
-        return {
-            project: this.config.project.toLowerCase(),
-            creator: this.config.creator.toLowerCase(),
-            environment: this.env.toLowerCase(),
-            region: this.region.toLowerCase(),
-        };
+        let tags = {};
+
+        // Root level override
+        if (this.config.tags) {
+            tags = this.config.tags;
+        }
+
+        // Deeper override. DefaultOptions is already merged here.
+        if (this.config.environments[this.env][this.stackName].tags) {
+            for (const tag in this.config.environments[this.env][this.stackName].tags) {
+                if (Object.prototype.hasOwnProperty.call(this.config.environments[this.env][this.stackName].tags, tag)) {
+                    tags[tag] = this.config.environments[this.env][this.stackName].tags[tag];
+                }
+            }
+        }
+
+        // Revert to default if empty.
+        if (Object.keys(tags).length === 0 && tags.constructor === Object) {
+            tags = {
+                project: this.config.project.toLowerCase(),
+                creator: this.config.creator,
+                environment: this.env.toLowerCase(),
+                region: this.region.toLowerCase(),
+            };
+        }
+        return tags;
     }
 
     getFullStackName() {

@@ -34,28 +34,30 @@ exports.start = async (command) => {
 
     let options = {};
     try {
+        const programOpts = program.opts();
+
         // Read options file (optional).
-        Logging.logIfVerbose('Reading options', program.verbose);
-        options = await Options.readOptionsFile(program.optionsFile);
-        if (program.optionsStack) {
-            if (Object.keys(config.stacks).indexOf(program.optionsStack) === -1) {
-                Logging.logError('Stack not found in config file', program.optionsStack);
+        Logging.logIfVerbose('Reading options', programOpts.verbose);
+        options = await Options.readOptionsFile(programOpts.optionsFile);
+        if (programOpts.optionsStack) {
+            if (Object.keys(config.stacks).indexOf(programOpts.optionsStack) === -1) {
+                Logging.logError('Stack not found in config file', programOpts.optionsStack);
                 process.exit(1);
             }
-            options.stacks = [program.optionsStack];
+            options.stacks = [programOpts.optionsStack];
         }
-        if (program.optionsEnvironment) {
-            if (Object.keys(config.environments).indexOf(program.optionsEnvironment) === -1) {
-                Logging.logError('Env not found in config file', program.optionsEnvironment);
+        if (programOpts.optionsEnvironment) {
+            if (Object.keys(config.environments).indexOf(programOpts.optionsEnvironment) === -1) {
+                Logging.logError('Env not found in config file', programOpts.optionsEnvironment);
                 process.exit(1);
             }
-            options.environments = [program.optionsEnvironment];
+            options.environments = [programOpts.optionsEnvironment];
         }
 
-        Logging.logIfVerbose(options, program.verbose);
+        Logging.logIfVerbose(options, programOpts.verbose);
 
         // Validate (and add stuff to) options.
-        Logging.logIfVerbose('Validating options', program.verbose);
+        Logging.logIfVerbose('Validating options', programOpts.verbose);
         options = await Options.validateOptions(options, config);
     } catch (err) {
         Logging.logError('Options', err);
@@ -139,7 +141,7 @@ exports.start = async (command) => {
 };
 
 program
-    .version('0.0.1')
+    .version('1.0.2')
     .description('Reads a config file (lola.yml) and acts on the AWS Cloudformation stacks defined in that file')
     .option('-c, --config-file <configFile>', 'Optional config file')
     .option('-o, --options-file <optionsFile>', 'Optional deploy options file')

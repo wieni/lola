@@ -76,6 +76,21 @@ class Config {
                     ) {
                         newConfig.environments[environmentName][stackName].hooks = defaultOptions[stackName].hooks;
                     }
+
+                    // Merge in tags.
+                    if (defaultOptions[stackName].tags) {
+                        if (!newConfig.environments[environmentName][stackName].tags) {
+                            newConfig.environments[environmentName][stackName].tags = defaultOptions[stackName].tags;
+                        } else {
+                            const tmpTags = newConfig.environments[environmentName][stackName].tags;
+                            newConfig.environments[environmentName][stackName].tags = defaultOptions[stackName].tags;
+                            for (const tag in tmpTags) {
+                                if (Object.prototype.hasOwnProperty.call(tmpTags, tag)) {
+                                    newConfig.environments[environmentName][stackName].tags[tag] = tmpTags[tag];
+                                }
+                            }
+                        }
+                    }
                 }
 
                 if (!newConfig.environments[environmentName][stackName].region) {
