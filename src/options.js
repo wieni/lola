@@ -8,7 +8,7 @@ class Options {
      * @param {string} fileName
      */
     static readOptionsFile(fileName = '') {
-        return fileName ? yaml.safeLoad(fs.readFileSync(`${process.cwd()}/${fileName}`, 'utf8')) : {};
+        return fileName ? yaml.load(fs.readFileSync(`${process.cwd()}/${fileName}`, 'utf8')) : {};
     }
 
     static async validateOptions(options, config) {

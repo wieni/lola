@@ -9,7 +9,7 @@ class Config {
      * @param {string} fileName
      */
     static readConfigFile(fileName = 'lola.yml') {
-        return yaml.safeLoad(fs.readFileSync(`${process.cwd()}/${fileName}`, 'utf8'));
+        return yaml.load(fs.readFileSync(`${process.cwd()}/${fileName}`, 'utf8'));
     }
 
     static async validateConfig(config) {

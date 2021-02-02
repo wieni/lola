@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 const { join, dirname } = require('path');
 const { readFileSync } = require('fs');
-const { parse } = require('ini');
+const ini = require('ini');
 const { homedir } = require('os');
 
 class AwsCredentials {
@@ -22,7 +22,7 @@ class AwsCredentials {
             const awsProfileDir = creds.filename ? dirname(creds.filename) : join(homedir(), '.aws');
             const file = process.env.AWS_CONFIG_FILE || join(awsProfileDir, 'config');
 
-            const config = parse(readFileSync(file, 'utf-8'))[`profile ${profile}`];
+            const config = ini.parse(readFileSync(file, 'utf-8'))[`profile ${profile}`];
             const sts = new AWS.STS({
                 credentials: new AWS.SharedIniFileCredentials({
                     profile: config.source_profile,

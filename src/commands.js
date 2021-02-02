@@ -46,8 +46,8 @@ class Commands {
 
         // Get Stack Intel.
         const stackData = await this.cloudformation.describeStack(this.getFullStackName());
-        const dump = yaml.safeDump(stackData);
-        return yaml.safeDump(this.constructor.colorStackOutput(dump));
+        const dump = yaml.dump(stackData);
+        return yaml.dump(this.constructor.colorStackOutput(dump));
     }
 
     async runExists() {
@@ -279,7 +279,7 @@ class Commands {
             return 'No changes';
         }
 
-        const dump = yaml.safeDump(changes.Changes);
+        const dump = yaml.dump(changes.Changes);
         return `\n${this.constructor.colorStackOutput(dump)}`;
     }
 
