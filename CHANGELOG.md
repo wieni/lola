@@ -7,8 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- markdownlint-disable MD024 -->
 <!-- markdownlint-disable MD004 -->
+## [1.0.2] (2021-02-XX)
 
-## [1.0.1] / 2020-08-07
+### Added
+
+- support for custom tagging on multiple levels ([#3])
+
+### Changed
+
+- improvements to documentation
+- removed creator as something useful
+- update dependencies
+## 1.0.1 / 2020-08-07
 
 - initial release
 

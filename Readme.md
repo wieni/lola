@@ -24,8 +24,8 @@ project: <project-name>
 # List of key-value tags that should be added to each stack. When set on this or a lower level,
 # it wil override the default tags of project, environment and region.
 tags:
-    - <name-of-tag>: <value-of-tag>
-    - <name-of-another-tag>: <value-of-another-tag>
+  <name-of-tag>: <value-of-tag>
+  <name-of-another-tag>: <value-of-another-tag>
 
 # Stacks is a description of the different cloudformation stacks you'll want to
 # manage and the specific order in which they'll need to be managed.
@@ -45,8 +45,8 @@ environments:
             region: <aws region>
             profile: <~/.aws/credentails profile name>
             tags:
-              - <name-of-tag>: <value-of-tag>
-              - <name-of-another-tag>: <value-of-another-tag>
+              <name-of-tag>: <value-of-tag>
+              <name-of-another-tag>: <value-of-another-tag>
     # Give that environment a name.
     <dev>:
         # Environment params for <stack1>
@@ -56,8 +56,8 @@ environments:
             region: <aws region>
             profile: <~/.aws/credentails profile name>
             tags:
-              - <name-of-tag>: <value-of-tag>
-              - <name-of-another-tag>: <value-of-another-tag>
+              <name-of-tag>: <value-of-tag>
+              <name-of-another-tag>: <value-of-another-tag>
             terminationProtection: <true|false>
             params:
                 <Param1>: <Value1>

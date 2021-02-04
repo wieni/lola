@@ -333,10 +333,14 @@ class Commands {
         if (Object.keys(tags).length === 0 && tags.constructor === Object) {
             tags = {
                 project: this.config.project.toLowerCase(),
-                creator: this.config.creator,
                 environment: this.env.toLowerCase(),
                 region: this.region.toLowerCase(),
             };
+
+            // Projects have a creator.
+            if (this.config.creator) {
+                tags.creator = this.config.creator;
+            }
         }
         return tags;
     }
