@@ -1,6 +1,6 @@
 {
   "name": "lola",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "AWS related deployment helper. . ",
   "main": "lola.js",
   "repository": "git@github.com:wieni/lola.git",
