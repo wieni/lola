@@ -1,6 +1,6 @@
 {
   "name": "lola",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "AWS related deployment helper. . ",
   "main": "lola.js",
   "repository": "git@github.com:wieni/lola.git",
@@ -8,12 +8,12 @@
   "license": "MIT",
   "preferGlobal": true,
   "dependencies": {
-    "aws-sdk": "^2.834.0",
-    "chalk": "^4.1.0",
-    "commander": "^7.0.0",
+    "aws-sdk": "^2.905.0",
+    "chalk": "^4.1.1",
+    "commander": "^7.2.0",
     "ini": "^2.0.0",
     "inquirer": "^7.3.3",
-    "js-yaml": "^4.0.0",
+    "js-yaml": "^4.1.0",
     "moment": "^2.29.1",
     "path": "^0.12.7"
   },
@@ -30,7 +30,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "^7.19.0",
+    "eslint": "^7.26.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.22.1"
   }
