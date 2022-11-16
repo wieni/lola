@@ -10,6 +10,7 @@ class Cloudformation {
         this.capabilities = [
             'CAPABILITY_IAM',
             'CAPABILITY_NAMED_IAM',
+            'CAPABILITY_AUTO_EXPAND',
         ];
 
         this.cloudformation = new AWS.CloudFormation({
