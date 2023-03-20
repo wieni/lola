@@ -1,11 +1,11 @@
-const chalk = require('chalk');
-const moment = require('moment');
+import chalk from 'chalk';
+import moment from 'moment';
 
 /**
  * Lola logging functions.
  *
-*/
-class Logging {
+ */
+export default class Logging {
     static async log(message) {
         console.log(`[${chalk.gray(moment().format('HH:mm:ss'))}] ${message}`);
     }
@@ -16,7 +16,13 @@ class Logging {
 
     static async logEvent(stackName, action, event) {
         /* eslint-disable max-len */
-        console.log(`[${chalk.gray(moment(event.Timestamp).format('HH:mm:ss'))}] ${action} ${chalk.cyan(stackName)}: ${event.ResourceType} - ${chalk.yellow(event.LogicalResourceId)} ${chalk.green(event.ResourceStatus)} ${event.ResourceStatusReason || ''}`);
+        console.log(
+            `[${chalk.gray(moment(event.Timestamp).format('HH:mm:ss'))}] ${action} ${chalk.cyan(stackName)}: ${
+                event.ResourceType
+            } - ${chalk.yellow(event.LogicalResourceId)} ${chalk.green(event.ResourceStatus)} ${
+                event.ResourceStatusReason || ''
+            }`
+        );
         /* eslint-enable max-len */
     }
 
@@ -35,5 +41,3 @@ class Logging {
         }
     }
 }
-
-module.exports = Logging;

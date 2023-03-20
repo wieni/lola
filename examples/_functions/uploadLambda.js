@@ -1,6 +1,6 @@
-const AWS = require('aws-sdk');
-const moment = require('moment');
-const chalk = require('chalk');
+import AWS from 'aws-sdk';
+import moment from 'moment';
+import chalk from 'chalk';
 const cmd = require('node-cmd-promise');
 const { yamlParse } = require('yaml-cfn');
 const fs = require('fs');
@@ -30,7 +30,10 @@ async function runAction(context) {
     });
 
     // Reverse engineer all the functions out of the template body.
-    const templateBody = await fs.readFileSync(`${process.cwd()}/${context.config.stacks[context.stackName].template}`, 'utf8');
+    const templateBody = await fs.readFileSync(
+        `${process.cwd()}/${context.config.stacks[context.stackName].template}`,
+        'utf8'
+    );
     const templateParsed = await yamlParse(templateBody);
 
     const lambdasExtra = ['-all-'];
@@ -78,27 +81,36 @@ async function runAction(context) {
 
         // Build it.
         const output = await cmd(`(cd ${path}; rm -Rf node_modules; npm install --production)`);
-        console.log(`[${chalk.gray(moment().format('HH:mm:ss'))}] Cleaning ${path}: ${output.stdout.replace(/(\r\n|\n|\r)/gm, '')}`);
+        console.log(
+            `[${chalk.gray(moment().format('HH:mm:ss'))}] Cleaning ${path}: ${output.stdout.replace(
+                /(\r\n|\n|\r)/gm,
+                ''
+            )}`
+        );
 
         // Zip it.
         const zipData = await zipDir(`${process.cwd()}/${path}`);
 
-        const uploadData = await s3.putObject({
-            Bucket: bucketName,
-            Key: s3key,
-            Body: zipData,
-        }).promise();
+        const uploadData = await s3
+            .putObject({
+                Bucket: bucketName,
+                Key: s3key,
+                Body: zipData,
+            })
+            .promise();
         console.log(`[${chalk.gray(moment().format('HH:mm:ss'))}] Uploaded ${s3key}`);
 
         // Trigger function update. Could we not send the zip directly?
         // But what with the cloudformation template then?
-        await lambdaService.updateFunctionCode({
-            FunctionName: functionName,
-            Publish: true,
-            S3Bucket: params.LambdaBucket,
-            S3Key: s3key,
-            S3ObjectVersion: uploadData.VersionId,
-        }).promise();
+        await lambdaService
+            .updateFunctionCode({
+                FunctionName: functionName,
+                Publish: true,
+                S3Bucket: params.LambdaBucket,
+                S3Key: s3key,
+                S3ObjectVersion: uploadData.VersionId,
+            })
+            .promise();
 
         console.log(`[${chalk.gray(moment().format('HH:mm:ss'))}] Refreshed ${functionName}`);
     }

@@ -1,14 +1,14 @@
 // const cfn = require('cfn');
-const yaml = require('js-yaml');
-const inquirer = require('inquirer');
-const chalk = require('chalk');
-const fs = require('fs');
+import yaml from 'js-yaml';
+import inquirer from 'inquirer';
+import chalk from 'chalk';
+import fs from 'fs';
 
-const Logging = require('./logging.js');
-const Actions = require('./actions.js');
-const CloudFormation = require('./cloudformation.js');
+import Logging from './logging.js';
+import Actions from './actions.js';
+import CloudFormation from './cloudformation.js';
 
-class Commands {
+export default class Commands {
     constructor(config, stackName, env) {
         this.config = config;
         this.stackName = stackName;
@@ -70,23 +70,25 @@ class Commands {
 
         // pre-deploy hook.
         if (this.hooks && this.hooks['pre-deploy']) {
-            await Promise.all(this.hooks['pre-deploy'].map(async (action) => {
-                try {
-                    const newContext = await Actions.runAction({
-                        config: this.config,
-                        stackName: this.stackName,
-                        env: this.env,
-                        action,
-                        outputs: stackData,
-                    });
-                    // TODO: SHould validate this!
-                    if (newContext && newContext.config) {
-                        this.config = newContext.config;
+            await Promise.all(
+                this.hooks['pre-deploy'].map(async (action) => {
+                    try {
+                        const newContext = await Actions.runAction({
+                            config: this.config,
+                            stackName: this.stackName,
+                            env: this.env,
+                            action,
+                            outputs: stackData,
+                        });
+                        // TODO: SHould validate this!
+                        if (newContext && newContext.config) {
+                            this.config = newContext.config;
+                        }
+                    } catch (err) {
+                        throw new Error(`pre-deploy: ${err}`);
                     }
-                } catch (err) {
-                    throw new Error(`pre-deploy: ${err}`);
-                }
-            }));
+                })
+            );
         }
 
         // Do the actual deploy.
@@ -95,45 +97,35 @@ class Commands {
             const token = await this.generateToken('update');
             const file = await this.getTemplateBody();
 
-            await this.cloudformation.updateStack(
-                this.getFullStackName(),
-                token,
-                this.params,
-                file,
-                this.getTags(),
-            );
+            await this.cloudformation.updateStack(this.getFullStackName(), token, this.params, file, this.getTags());
 
             await this.loopEvents('UPDATE_IN_PROGRESS', token);
         } else {
             const token = await this.generateToken('create');
             const file = await this.getTemplateBody();
 
-            await this.cloudformation.createStack(
-                this.getFullStackName(),
-                token,
-                this.params,
-                file,
-                this.getTags(),
-            );
+            await this.cloudformation.createStack(this.getFullStackName(), token, this.params, file, this.getTags());
 
             await this.loopEvents('CREATE_IN_PROGRESS', token);
         }
 
         // post-deploy hook.
         if (this.hooks && this.hooks['post-deploy']) {
-            await Promise.all(this.hooks['post-deploy'].map(async (action) => {
-                try {
-                    await Actions.runAction({
-                        config: this.config,
-                        stackName: this.stackName,
-                        env: this.env,
-                        action,
-                        outputs: stackData,
-                    });
-                } catch (err) {
-                    throw new Error(`post-deploy: ${err}`);
-                }
-            }));
+            await Promise.all(
+                this.hooks['post-deploy'].map(async (action) => {
+                    try {
+                        await Actions.runAction({
+                            config: this.config,
+                            stackName: this.stackName,
+                            env: this.env,
+                            action,
+                            outputs: stackData,
+                        });
+                    } catch (err) {
+                        throw new Error(`post-deploy: ${err}`);
+                    }
+                })
+            );
         }
     }
 
@@ -242,9 +234,12 @@ class Commands {
         try {
             await this.cloudformation.describeChangeSet(
                 this.getFullStackName(),
-                CloudFormation.getHash(this.getFullStackName()),
+                CloudFormation.getHash(this.getFullStackName())
             );
-            await this.cloudformation.deleteChangeSet(this.getFullStackName(), CloudFormation.getHash(this.getFullStackName()));
+            await this.cloudformation.deleteChangeSet(
+                this.getFullStackName(),
+                CloudFormation.getHash(this.getFullStackName())
+            );
         } catch (error) {
             if (error.code !== 'ChangeSetNotFound') {
                 throw new Error(error);
@@ -258,7 +253,7 @@ class Commands {
             body,
             this.params,
             this.getTags(),
-            'UPDATE',
+            'UPDATE'
         );
 
         // Wait until it's created.
@@ -323,7 +318,9 @@ class Commands {
         // Deeper override. DefaultOptions is already merged here.
         if (this.config.environments[this.env][this.stackName].tags) {
             for (const tag in this.config.environments[this.env][this.stackName].tags) {
-                if (Object.prototype.hasOwnProperty.call(this.config.environments[this.env][this.stackName].tags, tag)) {
+                if (
+                    Object.prototype.hasOwnProperty.call(this.config.environments[this.env][this.stackName].tags, tag)
+                ) {
                     tags[tag] = this.config.environments[this.env][this.stackName].tags[tag];
                 }
             }
@@ -350,9 +347,10 @@ class Commands {
         result = result.toLowerCase();
 
         // Allow overrides. Note: This makes it possible to uppercase stuff again.
-        if (this.config.environments[this.env]
-            && this.config.environments[this.env][this.stackName]
-            && this.config.environments[this.env][this.stackName].name
+        if (
+            this.config.environments[this.env] &&
+            this.config.environments[this.env][this.stackName] &&
+            this.config.environments[this.env][this.stackName].name
         ) {
             result = this.config.environments[this.env][this.stackName].name;
         }
@@ -377,14 +375,12 @@ class Commands {
 
         output = output.replace(/Replacement: Conditional/g, chalk.black.bgYellow('Replacement: Conditional'));
         output = output.replace(/Replacement: False/g, chalk.black.bgYellow('Replacement: False'));
-        output = output.replace(/Replacement: 'False'/g, chalk.black.bgYellow('Replacement: \'False\''));
+        output = output.replace(/Replacement: 'False'/g, chalk.black.bgYellow("Replacement: 'False'"));
         output = output.replace(/Replacement: True/g, chalk.black.bgRed('Replacement: True'));
-        output = output.replace(/Replacement: 'True'/g, chalk.black.bgRed('Replacement: \'True\''));
+        output = output.replace(/Replacement: 'True'/g, chalk.black.bgRed("Replacement: 'True'"));
 
         output = output.replace(/LogicalResourceId/g, chalk.underline('LogicalResourceId'));
         output = output.replace(/RequiresRecreation/g, chalk.underline('RequiresRecreation'));
         return output;
     }
 }
-
-module.exports = Commands;

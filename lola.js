@@ -1,15 +1,15 @@
 #!/usr/bin/env node
-const program = require('commander');
-const chalk = require('chalk');
-const AWS = require('aws-sdk');
+import { program } from 'commander';
+import chalk from 'chalk';
+import AWS from 'aws-sdk';
 
-const Logging = require('./src/logging.js');
-const AwsCredentials = require('./src/awsCredentials.js');
-const Config = require('./src/config.js');
-const Options = require('./src/options.js');
-const Commands = require('./src/commands.js');
+import Logging from './src/logging.js';
+import AwsCredentials from './src/awsCredentials.js';
+import Config from './src/config.js';
+import Options from './src/options.js';
+import Commands from './src/commands.js';
 
-exports.start = async (command) => {
+const start = async (command) => {
     Logging.logIfVerbose('Reading config file', program.verbose);
 
     let config = {};
@@ -72,69 +72,73 @@ exports.start = async (command) => {
             const commands = new Commands(config, stackName, env);
 
             // Banner.
-            Logging.log(`${chalk.green(`${command.toUpperCase()}`)}: ${chalk.yellow.bold(`${config.project} - ${stackName} - ${env}`)}`);
+            Logging.log(
+                `${chalk.green(`${command.toUpperCase()}`)}: ${chalk.yellow.bold(
+                    `${config.project} - ${stackName} - ${env}`
+                )}`
+            );
 
             switch (command) {
-            default:
-                Logging.logError('Unknown command', command);
-                break;
-            case 'validate':
-                try {
-                    await commands.runValidate();
-                    Logging.logOk(`Template ${stackName}`, 'Template is valid');
-                } catch (error) {
-                    Logging.logError(`Template ${stackName}`, error.message);
-                }
-                break;
-            case 'status':
-                try {
-                    const output = await commands.runStatus();
-                    Logging.logOk(`Status ${stackName}`, 'Stack found');
-                    Logging.logOk(`Status ${stackName}`, output, true);
-                } catch (error) {
-                    Logging.logError(`Status ${stackName}`, error.message);
-                }
-                break;
-            case 'deploy':
-                try {
-                    await commands.runDeploy();
-                    Logging.logOk(`Deploy ${stackName}`, 'Done');
-                } catch (error) {
-                    Logging.logError(`Deploy ${stackName}`, error.message);
-                }
-                break;
-            case 'delete':
-                try {
-                    await commands.runDelete();
-                    Logging.logOk(`Delete ${stackName}`, 'Done');
-                } catch (error) {
-                    Logging.logError(`Delete ${stackName}`, error.message);
-                }
-                break;
-            case 'action':
-                try {
-                    await commands.runAction();
-                    Logging.logOk(`Running action on ${stackName}`, 'Done');
-                } catch (error) {
-                    Logging.logError(`Error running action on ${stackName}`, error.message);
-                }
-                break;
-            case 'protection':
-                try {
-                    const feedback = await commands.runTerminationProtection();
-                    Logging.logOk(`Running protection on ${stackName}`, feedback);
-                } catch (error) {
-                    Logging.logError(`Error running protection on ${stackName}`, error.message);
-                }
-                break;
-            case 'changeSet':
-                try {
-                    const output = await commands.runChangeSet();
-                    Logging.logOk(`ChangeSet ${stackName}`, output, true);
-                } catch (error) {
-                    Logging.logError(`ChangeSet ${stackName}`, error.message);
-                }
-                break;
+                default:
+                    Logging.logError('Unknown command', command);
+                    break;
+                case 'validate':
+                    try {
+                        await commands.runValidate();
+                        Logging.logOk(`Template ${stackName}`, 'Template is valid');
+                    } catch (error) {
+                        Logging.logError(`Template ${stackName}`, error.message);
+                    }
+                    break;
+                case 'status':
+                    try {
+                        const output = await commands.runStatus();
+                        Logging.logOk(`Status ${stackName}`, 'Stack found');
+                        Logging.logOk(`Status ${stackName}`, output, true);
+                    } catch (error) {
+                        Logging.logError(`Status ${stackName}`, error.message);
+                    }
+                    break;
+                case 'deploy':
+                    try {
+                        await commands.runDeploy();
+                        Logging.logOk(`Deploy ${stackName}`, 'Done');
+                    } catch (error) {
+                        Logging.logError(`Deploy ${stackName}`, error.message);
+                    }
+                    break;
+                case 'delete':
+                    try {
+                        await commands.runDelete();
+                        Logging.logOk(`Delete ${stackName}`, 'Done');
+                    } catch (error) {
+                        Logging.logError(`Delete ${stackName}`, error.message);
+                    }
+                    break;
+                case 'action':
+                    try {
+                        await commands.runAction();
+                        Logging.logOk(`Running action on ${stackName}`, 'Done');
+                    } catch (error) {
+                        Logging.logError(`Error running action on ${stackName}`, error.message);
+                    }
+                    break;
+                case 'protection':
+                    try {
+                        const feedback = await commands.runTerminationProtection();
+                        Logging.logOk(`Running protection on ${stackName}`, feedback);
+                    } catch (error) {
+                        Logging.logError(`Error running protection on ${stackName}`, error.message);
+                    }
+                    break;
+                case 'changeSet':
+                    try {
+                        const output = await commands.runChangeSet();
+                        Logging.logOk(`ChangeSet ${stackName}`, output, true);
+                    } catch (error) {
+                        Logging.logError(`ChangeSet ${stackName}`, error.message);
+                    }
+                    break;
             }
         });
     });
@@ -154,7 +158,7 @@ program
     .alias('v')
     .description('Validates a stack')
     .action(() => {
-        exports.start('validate');
+        start('validate');
     });
 
 program
@@ -162,7 +166,7 @@ program
     .alias('s')
     .description('Get the status of a stack')
     .action(() => {
-        exports.start('status');
+        start('status');
     });
 
 program
@@ -170,7 +174,7 @@ program
     .alias('d')
     .description('Deploys a stack')
     .action(() => {
-        exports.start('deploy');
+        start('deploy');
     });
 
 program
@@ -178,7 +182,7 @@ program
     .alias('x')
     .description('Deletes a stack')
     .action(() => {
-        exports.start('delete');
+        start('delete');
     });
 
 program
@@ -186,7 +190,7 @@ program
     .alias('a')
     .description('Runs an action on a stack/env')
     .action(() => {
-        exports.start('action');
+        start('action');
     });
 
 program
@@ -194,7 +198,7 @@ program
     .alias('p')
     .description('Toggles termination protection on a stack/env')
     .action(() => {
-        exports.start('protection');
+        start('protection');
     });
 
 program
@@ -202,10 +206,10 @@ program
     .alias('c')
     .description('Create and view changeset of a stack/env')
     .action(() => {
-        exports.start('changeSet');
+        start('changeSet');
     });
 
-exports.lola = async () => {
+const lola = async () => {
     // Require a command.
     if (process.argv[2] === undefined) {
         program.outputHelp();
@@ -214,3 +218,5 @@ exports.lola = async () => {
 
     program.parse(process.argv);
 };
+
+export default lola;

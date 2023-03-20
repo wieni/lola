@@ -1,5 +1,5 @@
 #!/usr/bin/env node
 
-const lola = require('../lola');
+import lola from '../lola.js';
 
-lola.lola();
+lola();

@@ -1,17 +1,13 @@
-const AWS = require('aws-sdk');
-const crypto = require('crypto');
+import AWS from 'aws-sdk';
+import crypto from 'crypto';
 
 /**
  * Abstraction layer above aws sdk.
  */
-class Cloudformation {
+export default class Cloudformation {
     constructor(region) {
         // Bit bold but no mercy.
-        this.capabilities = [
-            'CAPABILITY_IAM',
-            'CAPABILITY_NAMED_IAM',
-            'CAPABILITY_AUTO_EXPAND',
-        ];
+        this.capabilities = ['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM', 'CAPABILITY_AUTO_EXPAND'];
 
         this.cloudformation = new AWS.CloudFormation({
             region,
@@ -24,9 +20,11 @@ class Cloudformation {
      * @param {string} body
      */
     async validateTemplate(body) {
-        await this.cloudformation.validateTemplate({
-            TemplateBody: body,
-        }).promise();
+        await this.cloudformation
+            .validateTemplate({
+                TemplateBody: body,
+            })
+            .promise();
     }
 
     /**
@@ -36,10 +34,12 @@ class Cloudformation {
      * @param {string} status
      */
     async updateTerminationProtection(stackName, status) {
-        return this.cloudformation.updateTerminationProtection({
-            EnableTerminationProtection: status,
-            StackName: stackName,
-        }).promise();
+        return this.cloudformation
+            .updateTerminationProtection({
+                EnableTerminationProtection: status,
+                StackName: stackName,
+            })
+            .promise();
     }
 
     /**
@@ -49,16 +49,19 @@ class Cloudformation {
      * @param {string} ClientRequestToken
      */
     async describeStackEvents(StackName, ClientRequestToken) {
-        const events = await this.cloudformation.describeStackEvents({
-            StackName,
-            // NextToken: 'STRING_VALUE',
-
-        }).promise();
+        const events = await this.cloudformation
+            .describeStackEvents({
+                StackName,
+                // NextToken: 'STRING_VALUE',
+            })
+            .promise();
 
         // Filter out only the good events.
         let result;
         if (events.StackEvents) {
-            result = await events.StackEvents.filter((event) => !ClientRequestToken || event.ClientRequestToken === ClientRequestToken);
+            result = await events.StackEvents.filter(
+                (event) => !ClientRequestToken || event.ClientRequestToken === ClientRequestToken
+            );
         }
 
         return result;
@@ -92,17 +95,19 @@ class Cloudformation {
         const transposedParams = await Cloudformation.transposeParams(parameters);
         const transposedTags = await Cloudformation.transposeTags(tags);
 
-        return this.cloudformation.createStack({
-            StackName,
-            Capabilities: this.capabilities,
-            EnableTerminationProtection: true,
-            ClientRequestToken,
-            OnFailure: 'DELETE',
-            Parameters: transposedParams,
-            Tags: transposedTags,
-            TemplateBody,
-            // TimeoutInMinutes: 0
-        }).promise();
+        return this.cloudformation
+            .createStack({
+                StackName,
+                Capabilities: this.capabilities,
+                EnableTerminationProtection: true,
+                ClientRequestToken,
+                OnFailure: 'DELETE',
+                Parameters: transposedParams,
+                Tags: transposedTags,
+                TemplateBody,
+                // TimeoutInMinutes: 0
+            })
+            .promise();
     }
 
     /**
@@ -111,9 +116,11 @@ class Cloudformation {
      * @param {string} stackName
      */
     async describeStack(stackName) {
-        const data = await this.cloudformation.describeStacks({
-            StackName: stackName,
-        }).promise();
+        const data = await this.cloudformation
+            .describeStacks({
+                StackName: stackName,
+            })
+            .promise();
         return data.Stacks[0];
     }
 
@@ -123,10 +130,12 @@ class Cloudformation {
      * @param {string} stackName
      */
     async deleteStack(StackName, ClientRequestToken) {
-        return this.cloudformation.deleteStack({
-            StackName,
-            ClientRequestToken,
-        }).promise();
+        return this.cloudformation
+            .deleteStack({
+                StackName,
+                ClientRequestToken,
+            })
+            .promise();
     }
 
     /**
@@ -146,16 +155,18 @@ class Cloudformation {
         const hash = await Cloudformation.getHash(stackName);
 
         // Create the change set.
-        const result = await this.cloudformation.createChangeSet({
-            ChangeSetName: hash,
-            StackName: stackName,
-            Capabilities: this.capabilities,
-            ChangeSetType: changeSetType,
-            ClientToken: hash,
-            Parameters: transposedParams,
-            Tags: transposedTags,
-            TemplateBody: body,
-        }).promise();
+        const result = await this.cloudformation
+            .createChangeSet({
+                ChangeSetName: hash,
+                StackName: stackName,
+                Capabilities: this.capabilities,
+                ChangeSetType: changeSetType,
+                ClientToken: hash,
+                Parameters: transposedParams,
+                Tags: transposedTags,
+                TemplateBody: body,
+            })
+            .promise();
 
         return result.Id;
     }
@@ -167,10 +178,12 @@ class Cloudformation {
      * @param {string} changeSetName
      */
     async describeChangeSet(stackName, changeSetName) {
-        const result = await this.cloudformation.describeChangeSet({
-            ChangeSetName: changeSetName,
-            StackName: stackName,
-        }).promise();
+        const result = await this.cloudformation
+            .describeChangeSet({
+                ChangeSetName: changeSetName,
+                StackName: stackName,
+            })
+            .promise();
 
         return result;
     }
@@ -182,10 +195,12 @@ class Cloudformation {
      * @param {string} changeSetName
      */
     async deleteChangeSet(stackName, changeSetName) {
-        const result = await this.cloudformation.deleteChangeSet({
-            ChangeSetName: changeSetName,
-            StackName: stackName,
-        }).promise();
+        const result = await this.cloudformation
+            .deleteChangeSet({
+                ChangeSetName: changeSetName,
+                StackName: stackName,
+            })
+            .promise();
 
         return result;
     }
@@ -240,5 +255,3 @@ class Cloudformation {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
 }
-
-module.exports = Cloudformation;
