@@ -1,21 +1,23 @@
 /* eslint-disable global-require, import/no-dynamic-require */
 
-const fs = require('fs');
-const util = require('util');
-const AWS = require('aws-sdk');
+import fs from 'fs';
+import util from 'util';
+import AWS from 'aws-sdk';
 
 const access = util.promisify(fs.access);
 
-class Actions {
+export default class Actions {
     static async getPathOfAction(config, stack, action) {
         let actionPath = false;
 
         if (config.stacks[stack].actions) {
-            await Promise.all(Object.keys(config.stacks[stack].actions).map(async (actionName) => {
-                if (action === actionName) {
-                    actionPath = config.stacks[stack].actions[actionName];
-                }
-            }));
+            await Promise.all(
+                Object.keys(config.stacks[stack].actions).map(async (actionName) => {
+                    if (action === actionName) {
+                        actionPath = config.stacks[stack].actions[actionName];
+                    }
+                })
+            );
         }
         return actionPath;
     }
@@ -44,11 +46,7 @@ class Actions {
      *   - outputs
      */
     static async runAction(context) {
-        const actionPath = await Actions.getPathOfAction(
-            context.config,
-            context.stackName,
-            context.action,
-        );
+        const actionPath = await Actions.getPathOfAction(context.config, context.stackName, context.action);
         const actionFile = require(`${process.cwd()}/${actionPath}`);
 
         // Add in the loaded credentials too.
@@ -59,5 +57,3 @@ class Actions {
         return actionFile.runAction(contextWithAws);
     }
 }
-
-module.exports = Actions;

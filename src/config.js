@@ -1,9 +1,9 @@
-const yaml = require('js-yaml');
-const fs = require('fs');
+import yaml from 'js-yaml';
+import fs from 'fs';
 
-const Actions = require('./actions.js');
+import Actions from './actions.js';
 
-class Config {
+export default class Config {
     /**
      * Read config from file,
      * @param {string} fileName
@@ -28,13 +28,17 @@ class Config {
         }
 
         // Stacks might have actions.
-        await Promise.all(Object.keys(newConfig.stacks).map(async (stack) => {
-            if (newConfig.stacks[stack].actions) {
-                await Promise.all(Object.keys(newConfig.stacks[stack].actions).map(async (action) => {
-                    await Actions.validateAction(newConfig.stacks[stack].actions[action]);
-                }));
-            }
-        }));
+        await Promise.all(
+            Object.keys(newConfig.stacks).map(async (stack) => {
+                if (newConfig.stacks[stack].actions) {
+                    await Promise.all(
+                        Object.keys(newConfig.stacks[stack].actions).map(async (action) => {
+                            await Actions.validateAction(newConfig.stacks[stack].actions[action]);
+                        })
+                    );
+                }
+            })
+        );
 
         // Projects have environments.
         if (!newConfig.environments) {
@@ -50,57 +54,67 @@ class Config {
         }
 
         // Stack in environments have profile/region.
-        await Promise.all(Object.keys(newConfig.environments).map(async (environmentName) => {
-            await Promise.all(Object.keys(newConfig.environments[environmentName]).map(async (stackName) => {
-                if (defaultOptions[stackName]) {
-                    // Fill in region.
-                    if (!newConfig.environments[environmentName][stackName].region
-                        && defaultOptions[stackName].region
-                    ) {
-                        newConfig.environments[environmentName][stackName].region = defaultOptions[stackName].region;
-                    }
-                    // Fill in profile.
-                    if (!newConfig.environments[environmentName][stackName].profile
-                        && defaultOptions[stackName].profile
-                    ) {
-                        newConfig.environments[environmentName][stackName].profile = defaultOptions[stackName].profile;
-                    }
-                    // Fill in actions.
-                    if (!newConfig.environments[environmentName][stackName].hooks
-                        && defaultOptions[stackName].hooks
-                    ) {
-                        newConfig.environments[environmentName][stackName].hooks = defaultOptions[stackName].hooks;
-                    }
+        await Promise.all(
+            Object.keys(newConfig.environments).map(async (environmentName) => {
+                await Promise.all(
+                    Object.keys(newConfig.environments[environmentName]).map(async (stackName) => {
+                        if (defaultOptions[stackName]) {
+                            // Fill in region.
+                            if (
+                                !newConfig.environments[environmentName][stackName].region &&
+                                defaultOptions[stackName].region
+                            ) {
+                                newConfig.environments[environmentName][stackName].region =
+                                    defaultOptions[stackName].region;
+                            }
+                            // Fill in profile.
+                            if (
+                                !newConfig.environments[environmentName][stackName].profile &&
+                                defaultOptions[stackName].profile
+                            ) {
+                                newConfig.environments[environmentName][stackName].profile =
+                                    defaultOptions[stackName].profile;
+                            }
+                            // Fill in actions.
+                            if (
+                                !newConfig.environments[environmentName][stackName].hooks &&
+                                defaultOptions[stackName].hooks
+                            ) {
+                                newConfig.environments[environmentName][stackName].hooks =
+                                    defaultOptions[stackName].hooks;
+                            }
 
-                    // Merge in tags.
-                    if (defaultOptions[stackName].tags) {
-                        if (!newConfig.environments[environmentName][stackName].tags) {
-                            newConfig.environments[environmentName][stackName].tags = defaultOptions[stackName].tags;
-                        } else {
-                            const tmpTags = newConfig.environments[environmentName][stackName].tags;
-                            newConfig.environments[environmentName][stackName].tags = defaultOptions[stackName].tags;
-                            for (const tag in tmpTags) {
-                                if (Object.prototype.hasOwnProperty.call(tmpTags, tag)) {
-                                    newConfig.environments[environmentName][stackName].tags[tag] = tmpTags[tag];
+                            // Merge in tags.
+                            if (defaultOptions[stackName].tags) {
+                                if (!newConfig.environments[environmentName][stackName].tags) {
+                                    newConfig.environments[environmentName][stackName].tags =
+                                        defaultOptions[stackName].tags;
+                                } else {
+                                    const tmpTags = newConfig.environments[environmentName][stackName].tags;
+                                    newConfig.environments[environmentName][stackName].tags =
+                                        defaultOptions[stackName].tags;
+                                    for (const tag in tmpTags) {
+                                        if (Object.prototype.hasOwnProperty.call(tmpTags, tag)) {
+                                            newConfig.environments[environmentName][stackName].tags[tag] = tmpTags[tag];
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
-                }
 
-                if (!newConfig.environments[environmentName][stackName].region) {
-                    throw new Error(`Stack ${stackName} has no region in ${environmentName}`);
-                }
-                if (!newConfig.environments[environmentName][stackName].profile) {
-                    throw new Error(`Stack ${stackName} has no profile in ${environmentName}`);
-                }
-            }));
-        }));
+                        if (!newConfig.environments[environmentName][stackName].region) {
+                            throw new Error(`Stack ${stackName} has no region in ${environmentName}`);
+                        }
+                        if (!newConfig.environments[environmentName][stackName].profile) {
+                            throw new Error(`Stack ${stackName} has no profile in ${environmentName}`);
+                        }
+                    })
+                );
+            })
+        );
 
         // Stacks in environments might have options. Validate them and/or copy over from default.
 
         return newConfig;
     }
 }
-
-module.exports = Config;

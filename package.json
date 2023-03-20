@@ -1,37 +1,36 @@
 {
-  "name": "lola",
-  "version": "1.0.5",
-  "description": "AWS related deployment helper. . ",
-  "main": "lola.js",
-  "repository": "git@github.com:wieni/lola.git",
-  "author": "Bart Van Thillo <bart@wieni.be>",
-  "license": "MIT",
-  "preferGlobal": true,
-  "dependencies": {
-    "aws-sdk": "^2.905.0",
-    "chalk": "^4.1.1",
-    "commander": "^7.2.0",
-    "ini": "^2.0.0",
-    "inquirer": "^7.3.3",
-    "js-yaml": "^4.1.0",
-    "moment": "^2.29.1",
-    "path": "^0.12.7"
-  },
-  "bin": {
-    "lola": "./bin/index.js"
-  },
-  "engines": {
-    "node": ">=12"
-  },
-  "scripts": {
-    "lint": "eslint ."
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "devDependencies": {
-    "eslint": "^7.26.0",
-    "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-plugin-import": "^2.22.1"
-  }
+    "name": "lola",
+    "version": "1.0.5",
+    "description": "AWS related deployment helper. . ",
+    "main": "lola.js",
+    "type": "module",
+    "repository": "git@github.com:wieni/lola.git",
+    "author": "Bart Van Thillo <bart@wieni.be>",
+    "license": "MIT",
+    "preferGlobal": true,
+    "dependencies": {
+        "aws-sdk": "^2.905.0",
+        "chalk": "^5.2.0",
+        "commander": "^7.2.0",
+        "ini": "^2.0.0",
+        "inquirer": "^7.3.3",
+        "js-yaml": "^4.1.0",
+        "moment": "^2.29.1",
+        "path": "^0.12.7"
+    },
+    "bin": {
+        "lola": "./bin/index.js"
+    },
+    "engines": {
+        "node": ">=18"
+    },
+    "scripts": {
+        "lint": "prettier . --write"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "devDependencies": {
+        "prettier": "^2.8.5"
+    }
 }

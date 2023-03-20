@@ -1,10 +1,10 @@
-const AWS = require('aws-sdk');
-const { join, dirname } = require('path');
-const { readFileSync } = require('fs');
-const ini = require('ini');
-const { homedir } = require('os');
+import AWS from 'aws-sdk';
+import { join, dirname } from 'path';
+import { readFileSync } from 'fs';
+import ini from 'ini';
+import { homedir } from 'os';
 
-class AwsCredentials {
+export default class AwsCredentials {
     static async loadCredentials(config, stackName, env) {
         const { profile } = config.environments[env][stackName];
         const { region } = config.environments[env][stackName];
@@ -38,15 +38,15 @@ class AwsCredentials {
                 if (error) {
                     reject(error);
                 } else {
-                    resolve(new AWS.Credentials(
-                        response.Credentials.AccessKeyId,
-                        response.Credentials.SecretAccessKey,
-                        response.Credentials.SessionToken,
-                    ));
+                    resolve(
+                        new AWS.Credentials(
+                            response.Credentials.AccessKeyId,
+                            response.Credentials.SecretAccessKey,
+                            response.Credentials.SessionToken
+                        )
+                    );
                 }
             });
         });
     }
 }
-
-module.exports = AwsCredentials;

@@ -1,8 +1,8 @@
-const yaml = require('js-yaml');
-const inquirer = require('inquirer');
-const fs = require('fs');
+import yaml from 'js-yaml';
+import inquirer from 'inquirer';
+import fs from 'fs';
 
-class Options {
+export default class Options {
     /**
      * Read config from file,
      * @param {string} fileName
@@ -17,7 +17,9 @@ class Options {
         const stackChoices = [];
         Object.keys(config.stacks).forEach((stack) => {
             stackChoices.push({
-                name: config.stacks[stack].description ? `${stack.padEnd(45)}${config.stacks[stack].description}` : stack,
+                name: config.stacks[stack].description
+                    ? `${stack.padEnd(45)}${config.stacks[stack].description}`
+                    : stack,
                 value: stack,
             });
         });
@@ -77,5 +79,3 @@ class Options {
         return deployOptions;
     }
 }
-
-module.exports = Options;
