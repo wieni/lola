@@ -64,18 +64,13 @@ const start = async (command) => {
 
     options.stacks.forEach(async (stackName) => {
         options.environments.forEach(async (env) => {
-            // Set credentials. Do it each time again since this can switch per stack/env.
-            // const credentials = await AwsCredentials.loadCredentials(config, stackName, env);
-
             // Run said action.
             const commands = new Commands(config, stackName, env);
 
+            const fullStackName = commands.getFullStackName();
+
             // Banner.
-            Logging.log(
-                `${chalk.green(`${command.toUpperCase()}`)}: ${chalk.yellow.bold(
-                    `${config.project} - ${stackName} - ${env}`
-                )}`
-            );
+            Logging.log(`${chalk.green(`${command.toUpperCase()}`)}: ${chalk.yellow.bold(`${fullStackName}`)}`);
 
             switch (command) {
                 default:
@@ -84,58 +79,58 @@ const start = async (command) => {
                 case 'validate':
                     try {
                         await commands.runValidate();
-                        Logging.logOk(`Template ${stackName}`, 'Template is valid');
+                        Logging.logOk(`Template ${fullStackName}`, 'Template is valid');
                     } catch (error) {
-                        Logging.logError(`Template ${stackName}`, error.message);
+                        Logging.logError(`Template ${fullStackName}`, error.message);
                     }
                     break;
                 case 'status':
                     try {
                         const output = await commands.runStatus();
-                        Logging.logOk(`Status ${stackName}`, 'Stack found');
-                        Logging.logOk(`Status ${stackName}`, output, true);
+                        Logging.logOk(`Status ${fullStackName}`, 'Stack found');
+                        Logging.logOk(`Status ${fullStackName}`, output, true);
                     } catch (error) {
-                        Logging.logError(`Status ${stackName}`, error.message);
+                        Logging.logError(`Status ${fullStackName}`, error.message);
                     }
                     break;
                 case 'deploy':
                     try {
                         await commands.runDeploy();
-                        Logging.logOk(`Deploy ${stackName}`, 'Done');
+                        Logging.logOk(`Deploy ${fullStackName}`, 'Done');
                     } catch (error) {
-                        Logging.logError(`Deploy ${stackName}`, error.message);
+                        Logging.logError(`Deploy ${fullStackName}`, error.message);
                     }
                     break;
                 case 'delete':
                     try {
                         await commands.runDelete();
-                        Logging.logOk(`Delete ${stackName}`, 'Done');
+                        Logging.logOk(`Delete ${fullStackName}`, 'Done');
                     } catch (error) {
-                        Logging.logError(`Delete ${stackName}`, error.message);
+                        Logging.logError(`Delete ${fullStackName}`, error.message);
                     }
                     break;
                 case 'action':
                     try {
                         await commands.runAction();
-                        Logging.logOk(`Running action on ${stackName}`, 'Done');
+                        Logging.logOk(`Running action on ${fullStackName}`, 'Done');
                     } catch (error) {
-                        Logging.logError(`Error running action on ${stackName}`, error.message);
+                        Logging.logError(`Error running action on ${fullStackName}`, error.message);
                     }
                     break;
                 case 'protection':
                     try {
                         const feedback = await commands.runTerminationProtection();
-                        Logging.logOk(`Running protection on ${stackName}`, feedback);
+                        Logging.logOk(`Running protection on ${fullStackName}`, feedback);
                     } catch (error) {
-                        Logging.logError(`Error running protection on ${stackName}`, error.message);
+                        Logging.logError(`Error running protection on ${fullStackName}`, error.message);
                     }
                     break;
                 case 'changeSet':
                     try {
                         const output = await commands.runChangeSet();
-                        Logging.logOk(`ChangeSet ${stackName}`, output, true);
+                        Logging.logOk(`ChangeSet ${fullStackName}`, output, true);
                     } catch (error) {
-                        Logging.logError(`ChangeSet ${stackName}`, error.message);
+                        Logging.logError(`ChangeSet ${fullStackName}`, error.message);
                     }
                     break;
             }
@@ -144,7 +139,7 @@ const start = async (command) => {
 };
 
 program
-    .version('1.0.2')
+    .version('2.0.0')
     .description('Reads a config file (lola.yml) and acts on the AWS Cloudformation stacks defined in that file')
     .option('-c, --config-file <configFile>', 'Optional config file')
     .option('-o, --options-file <optionsFile>', 'Optional deploy options file')
