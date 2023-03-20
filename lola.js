@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 import { program } from 'commander';
 import chalk from 'chalk';
-import AWS from 'aws-sdk';
 
 import Logging from './src/logging.js';
-import AwsCredentials from './src/awsCredentials.js';
+
 import Config from './src/config.js';
 import Options from './src/options.js';
 import Commands from './src/commands.js';
@@ -66,7 +65,7 @@ const start = async (command) => {
     options.stacks.forEach(async (stackName) => {
         options.environments.forEach(async (env) => {
             // Set credentials. Do it each time again since this can switch per stack/env.
-            AWS.config.credentials = await AwsCredentials.loadCredentials(config, stackName, env);
+            // const credentials = await AwsCredentials.loadCredentials(config, stackName, env);
 
             // Run said action.
             const commands = new Commands(config, stackName, env);

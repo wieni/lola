@@ -1,16 +1,35 @@
-import AWS from 'aws-sdk';
+import {
+    CloudFormationClient,
+    CreateChangeSetCommand,
+    CreateStackCommand,
+    DeleteChangeSetCommand,
+    DeleteStackCommand,
+    DescribeChangeSetCommand,
+    DescribeStackEventsCommand,
+    DescribeStacksCommand,
+    UpdateStackCommand,
+    UpdateTerminationProtectionCommand,
+    ValidateTemplateCommand,
+} from '@aws-sdk/client-cloudformation';
+import { fromIni } from '@aws-sdk/credential-providers';
 import crypto from 'crypto';
 
 /**
  * Abstraction layer above aws sdk.
  */
 export default class Cloudformation {
-    constructor(region) {
-        // Bit bold but no mercy.
-        this.capabilities = ['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM', 'CAPABILITY_AUTO_EXPAND'];
+    // Bit bold but no mercy.
+    capabilities = ['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM', 'CAPABILITY_AUTO_EXPAND'];
 
-        this.cloudformation = new AWS.CloudFormation({
+    cloudformation;
+
+    constructor(region, profile) {
+        this.cloudformation = new CloudFormationClient({
             region,
+            credentials: fromIni({
+                profile,
+                region,
+            }),
         });
     }
 
@@ -19,12 +38,12 @@ export default class Cloudformation {
      *
      * @param {string} body
      */
-    async validateTemplate(body) {
-        await this.cloudformation
-            .validateTemplate({
-                TemplateBody: body,
+    async validateTemplate(TemplateBody) {
+        await this.cloudformation.send(
+            new ValidateTemplateCommand({
+                TemplateBody,
             })
-            .promise();
+        );
     }
 
     /**
@@ -33,13 +52,13 @@ export default class Cloudformation {
      * @param {string} stackName
      * @param {string} status
      */
-    async updateTerminationProtection(stackName, status) {
-        return this.cloudformation
-            .updateTerminationProtection({
+    async updateTerminationProtection(StackName, status) {
+        await this.cloudformation.send(
+            new UpdateTerminationProtectionCommand({
                 EnableTerminationProtection: status,
-                StackName: stackName,
+                StackName,
             })
-            .promise();
+        );
     }
 
     /**
@@ -49,12 +68,11 @@ export default class Cloudformation {
      * @param {string} ClientRequestToken
      */
     async describeStackEvents(StackName, ClientRequestToken) {
-        const events = await this.cloudformation
-            .describeStackEvents({
+        const events = await this.cloudformation.send(
+            new DescribeStackEventsCommand({
                 StackName,
-                // NextToken: 'STRING_VALUE',
             })
-            .promise();
+        );
 
         // Filter out only the good events.
         let result;
@@ -68,18 +86,19 @@ export default class Cloudformation {
     }
 
     async updateStack(StackName, ClientRequestToken, parameters, TemplateBody, tags) {
-        const transposedParams = await Cloudformation.transposeParams(parameters);
-        const transposedTags = await Cloudformation.transposeTags(tags);
+        const transposedParams = Cloudformation.transposeParams(parameters);
+        const transposedTags = Cloudformation.transposeTags(tags);
 
-        const params = {
-            StackName,
-            Capabilities: this.capabilities,
-            ClientRequestToken,
-            Parameters: transposedParams,
-            Tags: transposedTags,
-            TemplateBody,
-        };
-        return this.cloudformation.updateStack(params).promise();
+        return this.cloudformation.send(
+            new UpdateStackCommand({
+                StackName,
+                Capabilities: this.capabilities,
+                ClientRequestToken,
+                Parameters: transposedParams,
+                Tags: transposedTags,
+                TemplateBody,
+            })
+        );
     }
 
     /**
@@ -92,11 +111,11 @@ export default class Cloudformation {
      * @param {array} tags
      */
     async createStack(StackName, ClientRequestToken, parameters, TemplateBody, tags) {
-        const transposedParams = await Cloudformation.transposeParams(parameters);
-        const transposedTags = await Cloudformation.transposeTags(tags);
+        const transposedParams = Cloudformation.transposeParams(parameters);
+        const transposedTags = Cloudformation.transposeTags(tags);
 
-        return this.cloudformation
-            .createStack({
+        return this.cloudformation.send(
+            new CreateStackCommand({
                 StackName,
                 Capabilities: this.capabilities,
                 EnableTerminationProtection: true,
@@ -107,7 +126,7 @@ export default class Cloudformation {
                 TemplateBody,
                 // TimeoutInMinutes: 0
             })
-            .promise();
+        );
     }
 
     /**
@@ -115,12 +134,13 @@ export default class Cloudformation {
      *
      * @param {string} stackName
      */
-    async describeStack(stackName) {
-        const data = await this.cloudformation
-            .describeStacks({
-                StackName: stackName,
+    async describeStack(StackName) {
+        const data = await this.cloudformation.send(
+            new DescribeStacksCommand({
+                StackName,
+                credentials: this.credentials,
             })
-            .promise();
+        );
         return data.Stacks[0];
     }
 
@@ -130,12 +150,12 @@ export default class Cloudformation {
      * @param {string} stackName
      */
     async deleteStack(StackName, ClientRequestToken) {
-        return this.cloudformation
-            .deleteStack({
+        return this.cloudformation.send(
+            new DeleteStackCommand({
                 StackName,
                 ClientRequestToken,
             })
-            .promise();
+        );
     }
 
     /**
@@ -150,13 +170,13 @@ export default class Cloudformation {
      * @return string
      */
     async createChangeSet(stackName, body, params, tags, changeSetType = 'UPDATE') {
-        const transposedParams = await Cloudformation.transposeParams(params);
-        const transposedTags = await Cloudformation.transposeTags(tags);
-        const hash = await Cloudformation.getHash(stackName);
+        const transposedParams = Cloudformation.transposeParams(params);
+        const transposedTags = Cloudformation.transposeTags(tags);
+        const hash = Cloudformation.getHash(stackName);
 
         // Create the change set.
-        const result = await this.cloudformation
-            .createChangeSet({
+        const result = await this.cloudformation.send(
+            new CreateChangeSetCommand({
                 ChangeSetName: hash,
                 StackName: stackName,
                 Capabilities: this.capabilities,
@@ -166,7 +186,7 @@ export default class Cloudformation {
                 Tags: transposedTags,
                 TemplateBody: body,
             })
-            .promise();
+        );
 
         return result.Id;
     }
@@ -177,15 +197,13 @@ export default class Cloudformation {
      * @param {string} stackName
      * @param {string} changeSetName
      */
-    async describeChangeSet(stackName, changeSetName) {
-        const result = await this.cloudformation
-            .describeChangeSet({
-                ChangeSetName: changeSetName,
-                StackName: stackName,
+    async describeChangeSet(StackName, ChangeSetName) {
+        return this.cloudformation.send(
+            new DescribeChangeSetCommand({
+                ChangeSetName,
+                StackName,
             })
-            .promise();
-
-        return result;
+        );
     }
 
     /**
@@ -194,15 +212,13 @@ export default class Cloudformation {
      * @param {string} stackName
      * @param {string} changeSetName
      */
-    async deleteChangeSet(stackName, changeSetName) {
-        const result = await this.cloudformation
-            .deleteChangeSet({
-                ChangeSetName: changeSetName,
-                StackName: stackName,
+    async deleteChangeSet(StackName, ChangeSetName) {
+        return this.cloudformation.send(
+            new DeleteChangeSetCommand({
+                ChangeSetName,
+                StackName,
             })
-            .promise();
-
-        return result;
+        );
     }
 
     /**

@@ -107,19 +107,17 @@ When running a lola command (validate, status, ..) without arguments, lola will 
 
 Each stack can define actions. Each action can be run on it's own or can be attached to one of the deploy hooks.
 
+Since version 2.0.0, it's necessary to use the `.mjs` extension for your actions files since lola is no longer CommonJs
+
 
 ```js
 /**
- *
- * @param Object config
- *   The full config object file
- * @param String stackName
- *   The stackName currently running
- * @param String env
- *   The env for which the current stack is running.
+ * @param Object context
  */
-function runAction(config, stackName, env) {
-    console.log(config);
+async function runAction(context) {
+    const { region } = context.config.environments[context.env][context.stackName];
+    const { profile } = context.config.environments[context.env][context.stackName];
+    const { params } = context.config.environments[context.env][context.stackName];
 
     throw new Error('Error');
 }
