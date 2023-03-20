@@ -26,12 +26,12 @@ export default class Commands {
         }
 
         // To avoid confusion: this is our own class, not the aws-sdk one.
-        this.cloudformation = new CloudFormation(this.region);
+        this.cloudformation = new CloudFormation(this.region, this.profile);
     }
 
     async runValidate() {
         try {
-            const file = await this.getTemplateBody();
+            const file = this.getTemplateBody();
             await this.cloudformation.validateTemplate(file);
         } catch (error) {
             throw new Error(error);
@@ -153,7 +153,7 @@ export default class Commands {
         try {
             await this.loopEvents('DELETE_IN_PROGRESS', token);
         } catch (error) {
-            if (error.code !== 'ValidationError') {
+            if (error.Code !== 'ValidationError') {
                 throw new Error(error);
             }
         }
@@ -241,7 +241,7 @@ export default class Commands {
                 CloudFormation.getHash(this.getFullStackName())
             );
         } catch (error) {
-            if (error.code !== 'ChangeSetNotFound') {
+            if (!error.Error || error.Error.Code !== 'ChangeSetNotFound') {
                 throw new Error(error);
             }
         }

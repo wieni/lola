@@ -1,8 +1,5 @@
-/* eslint-disable global-require, import/no-dynamic-require */
-
 import fs from 'fs';
 import util from 'util';
-import AWS from 'aws-sdk';
 
 const access = util.promisify(fs.access);
 
@@ -27,7 +24,7 @@ export default class Actions {
         await access(`${process.cwd()}/${actionPath}`);
 
         try {
-            const actionFile = require(`${process.cwd()}/${actionPath}`);
+            const { default: actionFile } = await import(`${process.cwd()}/${actionPath}`);
 
             if (typeof actionFile.runAction !== 'function') {
                 throw new Error(`runAction() function not found in ${actionPath}`);
@@ -48,11 +45,6 @@ export default class Actions {
     static async runAction(context) {
         const actionPath = await Actions.getPathOfAction(context.config, context.stackName, context.action);
         const actionFile = require(`${process.cwd()}/${actionPath}`);
-
-        // Add in the loaded credentials too.
-        const contextWithAws = context;
-        contextWithAws.AWS = {};
-        contextWithAws.AWS.config = AWS.config;
 
         return actionFile.runAction(contextWithAws);
     }
