@@ -44,8 +44,8 @@ export default class Actions {
      */
     static async runAction(context) {
         const actionPath = await Actions.getPathOfAction(context.config, context.stackName, context.action);
-        const actionFile = require(`${process.cwd()}/${actionPath}`);
+        const actionFile = await import(`${process.cwd()}/${actionPath}`);
 
-        return actionFile.runAction(contextWithAws);
+        return actionFile.runAction(context);
     }
 }
