@@ -24,7 +24,7 @@ export default class Actions {
         await access(`${process.cwd()}/${actionPath}`);
 
         try {
-            const { default: actionFile } = await import(`${process.cwd()}/${actionPath}`);
+            const actionFile = await import(`${process.cwd()}/${actionPath}`);
 
             if (typeof actionFile.runAction !== 'function') {
                 throw new Error(`runAction() function not found in ${actionPath}`);

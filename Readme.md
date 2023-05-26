@@ -107,10 +107,14 @@ When running a lola command (validate, status, ..) without arguments, lola will 
 
 Each stack can define actions. Each action can be run on it's own or can be attached to one of the deploy hooks.
 
-Since version 2.0.0, it's necessary to use the `.mjs` extension for your actions files since lola is no longer CommonJs
+Since version 2.0.0, you can use traditional Common.js Modules or new ES Modules.
 
+**Common.js Modules**\
+In `package.json` set `"type": "commonjs"` or leave it empty or name file with `.cjs` extension, not `.js`.
 
 ```js
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+
 /**
  * @param Object context
  */
@@ -123,4 +127,21 @@ async function runAction(context) {
 }
 
 module.exports.runAction = runAction;
+```
+
+**ES Modules**\
+In `package.json` set `"type": "module"` or name file with `.mjs` extension, not `.js`.
+
+```js
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+/**
+ * @param Object context
+ */
+export async function runAction(context) {
+    const { region } = context.config.environments[context.env][context.stackName];
+    const { profile } = context.config.environments[context.env][context.stackName];
+    const { params } = context.config.environments[context.env][context.stackName];
+
+    throw new Error('Error');
+}
 ```
