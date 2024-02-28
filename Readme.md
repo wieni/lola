@@ -1,8 +1,6 @@
 # Lola
 
-![image](https://david-dm.org/wieni/lola.svg)
-
-Lola is an opiniated cli tool to orchestrate AWS Cloudformation templates.
+Lola is an opinionated cli tool to orchestrate AWS Cloudformation templates.
 
 ## Installation
 
